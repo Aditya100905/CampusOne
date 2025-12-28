@@ -8,9 +8,6 @@ import { cookiesOptions } from "../utils/cookiesOptions.js";
 import cloudinary from "../utils/cloudinary.js";
 import streamifier from "streamifier";
 
-/* =========================
-   REGISTER USER
-========================= */
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, phone, password, role } = req.body;
 
@@ -44,9 +41,6 @@ const registerUser = asyncHandler(async (req, res) => {
   );
 });
 
-/* =========================
-   LOGIN USER
-========================= */
 const loginUser = asyncHandler(async (req, res) => {
   const { email, phone, password } = req.body;
 
@@ -85,9 +79,6 @@ const loginUser = asyncHandler(async (req, res) => {
     );
 });
 
-/* =========================
-   LOGOUT USER
-========================= */
 const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id,
@@ -100,9 +91,6 @@ const logoutUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse("Logged out successfully", 200));
 });
 
-/* =========================
-   GET CURRENT USER
-========================= */
 const getCurrentUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).select(
     "-password -resetPasswordToken -emailVerificationToken"
@@ -115,9 +103,6 @@ const getCurrentUser = asyncHandler(async (req, res) => {
   res.json(new ApiResponse("User fetched successfully", 200, user));
 });
 
-/* =========================
-   FORGOT PASSWORD
-========================= */
 const forgotUserPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
@@ -144,9 +129,6 @@ const forgotUserPassword = asyncHandler(async (req, res) => {
   res.json(new ApiResponse("Password reset email sent", 200));
 });
 
-/* =========================
-   RESET PASSWORD
-========================= */
 const resetUserPassword = asyncHandler(async (req, res) => {
   const { token } = req.params;
   const { newPassword } = req.body;
@@ -178,9 +160,6 @@ const resetUserPassword = asyncHandler(async (req, res) => {
   res.json(new ApiResponse("Password reset successful", 200));
 });
 
-/* =========================
-   SEND EMAIL VERIFICATION
-========================= */
 const sendUserEmailVerification = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
@@ -206,9 +185,6 @@ const sendUserEmailVerification = asyncHandler(async (req, res) => {
   res.json(new ApiResponse("Verification email sent", 200));
 });
 
-/* =========================
-   VERIFY EMAIL
-========================= */
 const verifyUserEmail = asyncHandler(async (req, res) => {
   const { token } = req.params;
 
@@ -235,9 +211,6 @@ const verifyUserEmail = asyncHandler(async (req, res) => {
   res.json(new ApiResponse("Email verified successfully", 200));
 });
 
-/* =========================
-   UPDATE USER AVATAR
-========================= */
 const updateUserAvatar = asyncHandler(async (req, res, next) => {
   const userId = req.user._id;
 
