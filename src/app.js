@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import institutionRoutes from './routes/institution.routes.js';
 import userRoutes from './routes/user.routes.js';
 import facultyRoutes from './routes/faculty.routes.js';
+import departmentRoutes from './routes/department.routes.js';
 
 const app = express();
 const PORT = process.env.PORT ;
@@ -25,6 +26,7 @@ app.use(express.static('public'));
 app.use('/api/institutions', institutionRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/faculties', facultyRoutes);
+app.use("/api/departments", departmentRoutes);
 
 app.use((err, req, res, next) => {
   res.status(err.statusCode || 500).json({
