@@ -33,12 +33,19 @@ const registerInstitution = asyncHandler(async (req, res) => {
     throw new ApiError("All fields are required", 400);
   }
 
-  const exists = await Institution.findOne({
-    $or: [{ contactEmail }, { code }, { contactPhone }],
-  });
+  const emailExists = await Institution.findOne({ contactEmail });
+  if (emailExists) {
+    throw new ApiError("Email already in use", 409);
+  }
 
-  if (exists) {
-    throw new ApiError("Institution already exists", 409);
+  const codeExists = await Institution.findOne({ code });
+  if (codeExists) {
+    throw new ApiError("Institution code already in use", 409);
+  }
+
+  const phoneExists = await Institution.findOne({ contactPhone });
+  if (phoneExists) {
+    throw new ApiError("Contact phone already in use", 409);
   }
 
   const institution = await Institution.create({
