@@ -7,7 +7,7 @@ import sendEmail from "../utils/sendEmail.js";
 import { cookiesOptions } from "../utils/cookiesOptions.js";
 import cloudinary from "../utils/cloudinary.js";
 import streamifier from "streamifier";
-import Faculty from '../models/faculty.model';
+import Faculty from '../models/faculty.model.js';
 
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, phone, password, role } = req.body;

@@ -7,9 +7,9 @@ import userRoutes from './routes/user.routes.js';
 import facultyRoutes from './routes/faculty.routes.js';
 import departmentRoutes from './routes/department.routes.js';
 import courseRoutes from './routes/course.routes.js';
+import studentRoutes from './routes/student.routes.js';
 
 const app = express();
-const PORT = process.env.PORT ;
 
 app.use(cors({
   origin: process.env.FRONTEND_URL,
@@ -29,6 +29,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/faculties', facultyRoutes);
 app.use("/api/departments", departmentRoutes);
 app.use("/api/courses", courseRoutes);
+app.use('/api/students', studentRoutes);
 
 app.use((err, req, res, next) => {
   res.status(err.statusCode || 500).json({
