@@ -2,6 +2,7 @@ import Faculty from "../models/faculty.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { User } from "../models/user.model.js";
 
 const createFaculty = asyncHandler(async (req, res) => {
     const {
@@ -33,6 +34,60 @@ const createFaculty = asyncHandler(async (req, res) => {
 
     res.json(
         new ApiResponse("Faculty created successfully", 201, faculty)
+    );
+});
+
+const registerFaculty = asyncHandler(async (req, res) => {
+    const {
+        name,
+        email,
+        phone,
+        password,
+        institutionId,
+        departmentId,
+        designation,
+        dateOfJoining,
+        courses
+    } = req.body;
+
+    if (!name || !email || !phone || !password ||
+        !institutionId || !departmentId || !designation || !dateOfJoining
+    ) {
+        throw new ApiError("All required fields must be provided", 400);
+    }
+
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail) throw new ApiError("Email already in use", 400);
+
+    const existingPhone = await User.findOne({ phone });
+    if (existingPhone) throw new ApiError("Phone number already in use", 400);
+
+    const user = await User.create({
+        name,
+        email,
+        phone,
+        password,
+        role: "faculty",
+        avatar: process.env.BACKEND_URL + "/user.png",
+    });
+
+    const faculty = await Faculty.create({
+        userId: user._id,
+        institutionId,
+        departmentId,
+        designation,
+        courses: courses || [],
+        dateOfJoining,
+    });
+
+    const cleanUser = await User.findById(user._id)
+        .select("-password -resetPasswordToken -emailVerificationToken")
+
+    return res.status(201).json(
+        new ApiResponse("Faculty registered successfully", 201, {
+            user: cleanUser,
+            faculty,
+        })
     );
 });
 
@@ -185,6 +240,7 @@ const toggleFacultyInCharge = asyncHandler(async (req, res) => {
 
 export {
     createFaculty,
+    registerFaculty,
     editFaculty,
     getFacultiesByInstitution,
     getFacultiesByDepartment,

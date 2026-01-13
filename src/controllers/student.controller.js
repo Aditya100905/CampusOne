@@ -2,6 +2,7 @@ import Student from "../models/student.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { User } from "../models/user.model.js";
 
 const createStudent = asyncHandler(async (req, res) => {
     const {
@@ -52,6 +53,67 @@ const createStudent = asyncHandler(async (req, res) => {
 
     res.json(
         new ApiResponse("Student created successfully", 201, student)
+    );
+});
+
+const registerStudent = asyncHandler(async (req, res) => {
+    const {
+        name,
+        email,
+        phone,
+        password,
+        institutionId,
+        departmentId,
+        enrollmentNumber,
+        courseIds,
+        semester,
+        admissionYear,
+        hostelStatus,
+        guardianDetails
+    } = req.body;
+
+    if (!name || !email || !phone || !password ||
+        !institutionId || !departmentId || !enrollmentNumber ||
+        !semester || !admissionYear
+    ) {
+        throw new ApiError("All required fields must be provided", 400);
+    }
+
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail) throw new ApiError("Email already in use", 400);
+
+    const existingPhone = await User.findOne({ phone });
+    if (existingPhone) throw new ApiError("Phone already in use", 400);
+
+    const user = await User.create({
+        name,
+        email,
+        phone,
+        password,
+        role: "student",
+        avatar: process.env.BACKEND_URL + "/user.png",
+    });
+
+    const student = await Student.create({
+        userId: user._id,
+        institutionId,
+        departmentId,
+        enrollmentNumber,
+        courseIds: courseIds || [],
+        semester,
+        admissionYear,
+        hostelStatus: hostelStatus ?? false,
+        guardianDetails: guardianDetails || {},
+    });
+
+    const cleanUser = await User.findById(user._id)
+        .select("-password -resetPasswordToken -emailVerificationToken");
+
+    return res.status(201).json(
+        new ApiResponse("Student registered successfully", 201, {
+            user: cleanUser,
+            student,
+        })
     );
 });
 
@@ -210,6 +272,7 @@ const updateHostelStatus = asyncHandler(async (req, res) => {
 
 export {
     createStudent,
+    registerStudent,
     editStudent,
     getStudentsByInstitution,
     getStudentsByDepartment,

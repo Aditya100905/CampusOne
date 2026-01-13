@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
     createStudent,
+    registerStudent,
     deleteStudent,
     editStudent,
     getStudentsByDepartment,
@@ -24,6 +25,11 @@ router.post(
     "/create-student",
     validateInstitutionJWT,
     createStudent
+);
+router.post(
+    "/register",
+    validateInstitutionJWT,
+    registerStudent
 );
 router.put(
     "/edit-student/:studentId",
