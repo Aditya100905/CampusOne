@@ -297,7 +297,7 @@ const getFacultyByUserId = asyncHandler(async (req, res) => {
   if (!user) {
     throw new ApiError("User not found", 404);
   }
-  if (!user.role || user.role !== 'faculty') {
+  if (!user.role || user.role !== 'Faculty') {
     throw new ApiError("User is not a faculty member", 400);
   }
   const faculty = await Faculty.findOne({ userId: userId }).populate('institutionId departmentId courses');
