@@ -1,5 +1,8 @@
 import Student from "../models/student.model.js";
 import { User } from "../models/user.model.js";
+import { Institution } from "../models/institution.model.js";
+import Department from "../models/department.model.js";
+import Course from "../models/course.model.js";
 
 export const registerStudentService = async (payload) => {
   const {
@@ -7,10 +10,10 @@ export const registerStudentService = async (payload) => {
     email,
     phone,
     password,
-    institutionId,
-    departmentId,
+    institutionCode,
+    departmentCode,
     enrollmentNumber,
-    courseIds,
+    courseCodes,
     semester,
     admissionYear,
     hostelStatus,
@@ -19,8 +22,8 @@ export const registerStudentService = async (payload) => {
 
   if (
     !name || !email || !phone || !password ||
-    !institutionId || !departmentId || !enrollmentNumber ||
-    !semester || !admissionYear
+    !institutionCode || !departmentCode ||
+    !semester || !admissionYear || !enrollmentNumber
   ) {
     throw new Error("Required fields missing");
   }
@@ -31,8 +34,22 @@ export const registerStudentService = async (payload) => {
   const existingPhone = await User.findOne({ phone });
   if (existingPhone) throw new Error("Phone in use");
 
-  let user;
+  const institution = await Institution.findOne({ code: institutionCode });
+  if (!institution) throw new Error("Invalid institution code");
 
+  const department = await Department.findOne({ code: departmentCode });
+  if (!department) throw new Error("Invalid department code");
+
+  let courses = [];
+  if (courseCodes) {
+    const codesArray = courseCodes.split(",").map(c => c.trim());
+    courses = await Course.find({ code: { $in: codesArray } });
+    if (courses.length !== codesArray.length) {
+      throw new Error("Some course codes are invalid");
+    }
+  }
+
+  let user;
   try {
     user = await User.create({
       name,
@@ -45,10 +62,10 @@ export const registerStudentService = async (payload) => {
 
     await Student.create({
       userId: user._id,
-      institutionId,
-      departmentId,
+      institutionId: institution._id,
+      departmentId: department._id,
       enrollmentNumber,
-      courseIds: courseIds ? courseIds.split(",") : [],
+      courseIds: courses.map(c => c._id),
       semester,
       admissionYear,
       hostelStatus: hostelStatus ?? false,
@@ -57,7 +74,6 @@ export const registerStudentService = async (payload) => {
 
   } catch (err) {
     if (user) await User.deleteOne({ _id: user._id });
-
     throw err;
   }
 };
