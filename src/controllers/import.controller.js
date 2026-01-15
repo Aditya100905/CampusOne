@@ -7,7 +7,12 @@ export const importStudents = async (req, res) => {
   const filePath = req.file.path;
 
   const csvData = fs.readFileSync(filePath, "utf8");
-  const { data: rows } = Papa.parse(csvData, { header: true });
+  let { data: rows } = Papa.parse(csvData, { header: true });
+
+  rows = rows.filter(row => {
+    if (!row) return false;
+    return Object.values(row).some(v => v && v.toString().trim() !== "");
+  });
 
   const total = rows.length;
 

@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config({ path: ".env" });
 
 import { dbConnect } from "./db/index.js";
-import { kafkaProducer } from "./kafka/producer.js";   // ← add this
+import { kafkaProducer } from "./kafka/producer.js"; 
 
 const PORT = process.env.PORT;
 
@@ -13,7 +13,7 @@ const startServer = async () => {
     await dbConnect();
     console.log("📦 MongoDB connected");
 
-    await kafkaProducer.connect();   // ← connect producer here
+    await kafkaProducer.connect();  
     console.log("📨 Kafka Producer connected");
 
     app.listen(PORT, () => {
