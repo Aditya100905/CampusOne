@@ -73,8 +73,14 @@ export const registerStudentService = async (payload) => {
       hostelStatus: hostelStatus ?? false,
       guardianDetails: guardianDetails ? JSON.parse(guardianDetails) : {},
     });
+    const sanitizedUser = user.toObject();
+    delete sanitizedUser.password;
+    delete sanitizedUser.accessToken;
 
-    return { user, student };
+    return {
+      user: sanitizedUser,
+      student
+    };
   } catch (err) {
     if (user) await User.deleteOne({ _id: user._id });
     throw err;

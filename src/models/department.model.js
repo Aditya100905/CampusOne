@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const departmentSchema = new mongoose.Schema(
     {
-        InstitutionId: {
+        institutionId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Institution',
             required: true

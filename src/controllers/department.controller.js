@@ -4,9 +4,9 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 const createDepartment = asyncHandler(async (req, res) => {
-  const { InstitutionId, name, code, contactEmail } = req.body;
+  const { institutionId, name, code, contactEmail } = req.body;
 
-  if (!InstitutionId || !name || !code || !contactEmail) {
+  if (!institutionId || !name || !code || !contactEmail) {
     throw new ApiError("All fields are required", 400);
   }
 
@@ -16,7 +16,7 @@ const createDepartment = asyncHandler(async (req, res) => {
   }
 
   const department = await Department.create({
-    InstitutionId,
+    institutionId,
     name,
     code,
     contactEmail,
@@ -31,7 +31,7 @@ const getDepartmentsByInstitution = asyncHandler(async (req, res) => {
   const { institutionId } = req.params;
 
   const departments = await Department.find({
-    InstitutionId: institutionId,
+    institutionId: institutionId,
   }).populate("headOfDepartment", "designation userId");
 
   res.json(
