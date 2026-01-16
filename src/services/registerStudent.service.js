@@ -50,6 +50,8 @@ export const registerStudentService = async (payload) => {
   }
 
   let user;
+  let student;
+
   try {
     user = await User.create({
       name,
@@ -60,7 +62,7 @@ export const registerStudentService = async (payload) => {
       avatar: process.env.BACKEND_URL + "/user.png",
     });
 
-    await Student.create({
+    student = await Student.create({
       userId: user._id,
       institutionId: institution._id,
       departmentId: department._id,
@@ -72,6 +74,7 @@ export const registerStudentService = async (payload) => {
       guardianDetails: guardianDetails ? JSON.parse(guardianDetails) : {},
     });
 
+    return { user, student };
   } catch (err) {
     if (user) await User.deleteOne({ _id: user._id });
     throw err;

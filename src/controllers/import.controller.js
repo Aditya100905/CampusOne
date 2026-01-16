@@ -5,7 +5,6 @@ import { kafkaProducer } from "../kafka/producer.js";
 
 export const importStudents = async (req, res) => {
   const filePath = req.file.path;
-
   const csvData = fs.readFileSync(filePath, "utf8");
   let { data: rows } = Papa.parse(csvData, { header: true });
 
@@ -22,6 +21,7 @@ export const importStudents = async (req, res) => {
     success: 0,
     failed: 0,
     status: "processing",
+    startedAt: new Date()
   });
 
   const importId = importRecord._id.toString();
@@ -43,7 +43,7 @@ export const importStudents = async (req, res) => {
   }
 
   return res.json({
-    message: "Import started",
+    message: "Student import queued",
     importId,
     total,
   });

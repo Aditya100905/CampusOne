@@ -22,6 +22,12 @@ const studentImportSchema = new mongoose.Schema({
     enum: ["pending", "processing", "completed", "error"],
     default: "pending"
   },
+  createdObjects: [
+    {
+      user: { type: Object, default: {} },
+      student: { type: Object, default: {} }
+    }
+  ],
   errors: [
     {
       row: Number,
