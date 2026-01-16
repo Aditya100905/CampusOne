@@ -37,59 +37,6 @@ const createFaculty = asyncHandler(async (req, res) => {
     );
 });
 
-const registerFaculty = asyncHandler(async (req, res) => {
-    const {
-        name,
-        email,
-        phone,
-        password,
-        institutionId,
-        departmentId,
-        designation,
-        dateOfJoining,
-        courses
-    } = req.body;
-
-    if (!name || !email || !phone || !password ||
-        !institutionId || !departmentId || !designation || !dateOfJoining
-    ) {
-        throw new ApiError("All required fields must be provided", 400);
-    }
-
-    const existingEmail = await User.findOne({ email });
-    if (existingEmail) throw new ApiError("Email already in use", 400);
-
-    const existingPhone = await User.findOne({ phone });
-    if (existingPhone) throw new ApiError("Phone number already in use", 400);
-
-    const user = await User.create({
-        name,
-        email,
-        phone,
-        password,
-        role: "faculty",
-        avatar: process.env.BACKEND_URL + "/user.png",
-    });
-
-    const faculty = await Faculty.create({
-        userId: user._id,
-        institutionId,
-        departmentId,
-        designation,
-        courses: courses || [],
-        dateOfJoining,
-    });
-
-    const cleanUser = await User.findById(user._id)
-        .select("-password -resetPasswordToken -emailVerificationToken")
-
-    return res.status(201).json(
-        new ApiResponse("Faculty registered successfully", 201, {
-            user: cleanUser,
-            faculty,
-        })
-    );
-});
 
 const editFaculty = asyncHandler(async (req, res) => {
     const { facultyId } = req.params;

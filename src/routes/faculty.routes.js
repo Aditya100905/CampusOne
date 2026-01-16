@@ -1,7 +1,6 @@
 import { Router } from "express";
 import {
     createFaculty,
-    registerFaculty,
     deleteFaculty,
     editFaculty,
     getFacultiesByDepartment,
@@ -22,7 +21,6 @@ router.get("/:facultyId", getFacultyById);
 
 // Protected Routes
 router.post("/create-faculty", validateInstitutionJWT, createFaculty);
-router.post("/register", validateInstitutionJWT, registerFaculty);
 router.put("/edit-faculty/:facultyId", validateInstitutionJWT, editFaculty);
 router.put("edit-facultyById/:facultyId", validateUserJWT, editFaculty);
 router.get("/institution/:institutionId", validateInstitutionJWT, getFacultiesByInstitution);

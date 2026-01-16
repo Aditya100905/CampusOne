@@ -56,67 +56,6 @@ const createStudent = asyncHandler(async (req, res) => {
     );
 });
 
-const registerStudent = asyncHandler(async (req, res) => {
-    const {
-        name,
-        email,
-        phone,
-        password,
-        institutionId,
-        departmentId,
-        enrollmentNumber,
-        courseIds,
-        semester,
-        admissionYear,
-        hostelStatus,
-        guardianDetails
-    } = req.body;
-
-    if (!name || !email || !phone || !password ||
-        !institutionId || !departmentId || !enrollmentNumber ||
-        !semester || !admissionYear
-    ) {
-        throw new ApiError("All required fields must be provided", 400);
-    }
-
-    const existingEmail = await User.findOne({ email });
-    if (existingEmail) throw new ApiError("Email already in use", 400);
-
-    const existingPhone = await User.findOne({ phone });
-    if (existingPhone) throw new ApiError("Phone already in use", 400);
-
-    const user = await User.create({
-        name,
-        email,
-        phone,
-        password,
-        role: "student",
-        avatar: process.env.BACKEND_URL + "/user.png",
-    });
-
-    const student = await Student.create({
-        userId: user._id,
-        institutionId,
-        departmentId,
-        enrollmentNumber,
-        courseIds: courseIds || [],
-        semester,
-        admissionYear,
-        hostelStatus: hostelStatus ?? false,
-        guardianDetails: guardianDetails || {},
-    });
-
-    const cleanUser = await User.findById(user._id)
-        .select("-password -resetPasswordToken -emailVerificationToken");
-
-    return res.status(201).json(
-        new ApiResponse("Student registered successfully", 201, {
-            user: cleanUser,
-            student,
-        })
-    );
-});
-
 const editStudent = asyncHandler(async (req, res) => {
     const { studentId } = req.params;
     delete req.body.userId;
