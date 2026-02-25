@@ -1,4 +1,5 @@
 import { Kafka, Partitioners } from "kafkajs";
+import logger from "../utils/logger.js";
 
 let kafkaProducer = null;
 
@@ -14,12 +15,12 @@ if (process.env.NODE_ENV !== "production") {
 
   try {
     await kafkaProducer.connect();
-    console.log("📨 Kafka Producer connected (dev)");
+    logger.info("📨 Kafka Producer connected (dev)");
   } catch (err) {
-    console.warn("⚠️ Kafka connection failed (dev)", err);
+    logger.warn({ err }, "⚠️ Kafka connection failed (dev)");
   }
 } else {
-  console.log("🚫 Kafka disabled in production");
+  logger.info("🚫 Kafka disabled in production");
 }
 
 export { kafkaProducer };

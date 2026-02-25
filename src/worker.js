@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config({ path: ".env" });
 
+import logger from "./utils/logger.js";
 import { dbConnect } from "./db/index.js";
 import { startStudentConsumer } from "./kafka/studentConsumer.js";
 import { startFacultyConsumer } from "./kafka/facultyConsumer.js";
@@ -8,21 +9,22 @@ import { startFacultyConsumer } from "./kafka/facultyConsumer.js";
 const startWorker = async () => {
   try {
     await dbConnect();
-    console.log("📦 Worker MongoDB connected");
+    logger.info("📦 Worker MongoDB connected");
+    
     if (process.env.NODE_ENV === "production") {
-      console.log("🚫 Worker disabled in production");
+      logger.warn("🚫 Worker disabled in production");
       process.exit(0);
     }
 
-
     await startStudentConsumer();
-    console.log("⚙️ Worker Student Kafka Consumer running");
+    logger.info("⚙️ Worker Student Kafka Consumer running");
 
     await startFacultyConsumer();
-    console.log("⚙️ Worker Faculty Kafka Consumer running");
+    logger.info("⚙️ Worker Faculty Kafka Consumer running");
 
   } catch (error) {
-    console.error("🔴 Worker failed:", error);
+    logger.error({ err: error }, "🔴 Worker failed");
+    process.exit(1);
   }
 };
 

@@ -1,13 +1,14 @@
 import dotenv from "dotenv";
 dotenv.config({ path: ".env" });
 
+import logger from "./utils/logger.js";
 import { dbConnect } from "./db/index.js";
+
 let kafkaProducer = null;
 if (process.env.NODE_ENV !== "production") {
   const mod = await import("./kafka/producer.js");
   kafkaProducer = mod.kafkaProducer;
 }
-
 
 const PORT = process.env.PORT;
 
@@ -16,18 +17,20 @@ const startServer = async () => {
 
   try {
     await dbConnect();
-    console.log("📦 MongoDB connected");
+    logger.info("📦 MongoDB connected");
+    
     if (process.env.NODE_ENV !== "production") {
       await kafkaProducer.connect();
-      console.log("📨 Kafka Producer connected");
+      logger.info("📨 Kafka Producer connected");
     }
 
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
+      logger.info(`🚀 Server running on port ${PORT}`);
     });
 
   } catch (error) {
-    console.error("🔴 Startup failed:", error);
+    logger.error({ err: error }, "🔴 Startup failed");
+    process.exit(1);
   }
 };
 

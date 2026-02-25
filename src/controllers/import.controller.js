@@ -2,6 +2,7 @@ import fs from "fs";
 import Papa from "papaparse";
 import { FacultyImport, StudentImport } from "../models/import.model.js";
 import { kafkaProducer } from "../kafka/producer.js";
+import logger from "../utils/logger.js";
 
 export const importStudents = async (req, res) => {
   const filePath = req.file.path;
@@ -39,7 +40,7 @@ export const importStudents = async (req, res) => {
         ],
       });
     } else {
-      console.log("🚫 Kafka disabled in production → skipping student queue");
+      logger.warn("🚫 Kafka disabled in production → skipping student queue");
     }
   }
 
@@ -95,7 +96,7 @@ export const importFaculty = async (req, res) => {
         ]
       });
     } else {
-      console.log("🚫 Kafka disabled in production → skipping faculty queue");
+      logger.warn("🚫 Kafka disabled in production → skipping faculty queue");
     }
   }
 

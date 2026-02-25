@@ -1,13 +1,14 @@
 import { ApiError } from "../utils/ApiError.js";
+import logger from "../utils/logger.js";
 
 const errorHandler = (err, req, res, next) => {
-    console.error("🔥 Backend Error:", err.message);
+    logger.error({ err: err, path: req.path, method: req.method }, "Backend Error");
 
     if (err instanceof ApiError) {
         return res.status(err.statusCode).json({
             success: false,
             message: err.message,
-            failedRows: Array.isArray(err.errors) ? err.errors : [err.errors], // Ensure always an array
+            failedRows: Array.isArray(err.errors) ? err.errors : [err.errors],
         });
     }
     return res.status(500).json({
