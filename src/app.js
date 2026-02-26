@@ -19,8 +19,17 @@ import assignmentRoutes from './routes/responsibilityAssignment.routes.js';
 import applicationRoutes from './routes/application.routes.js';
 import helmet from "helmet";
 import mongoSanitize from "express-mongo-sanitize";
+import pinoHttp from "pino-http";
+import logger from "./utils/logger.js";
+import crypto from "crypto";
 
 const app = express();
+
+app.use((req, res, next) => {
+  req.id = crypto.randomUUID();
+  res.setHeader('X-Request-ID', req.id);
+  next();
+});
 
 app.use(cors({
   origin: process.env.FRONTEND_URL?.split(','),
@@ -28,9 +37,14 @@ app.use(cors({
   credentials: true,
 }));
 
-
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: process.env.NODE_ENV === "production" ? undefined : false,
+  crossOriginEmbedderPolicy: false,
+}));
 app.use(mongoSanitize());
+if (process.env.NODE_ENV !== "production") {
+  app.use(pinoHttp({ logger }));
+}
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(cookieParser());
@@ -52,6 +66,24 @@ app.use('/api/admissions', admissionRoutes);
 app.use('/api/responsibility', responsibilityRoutes);
 app.use('/api/assign-responsibility',assignmentRoutes);
 app.use('/api/application', applicationRoutes);
+
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+    code: 404,
+    requestId: req.id
+  });
+});
+
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
 
 app.use((err, req, res, next) => {
   res.status(err.statusCode || 500).json({
