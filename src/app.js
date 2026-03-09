@@ -17,6 +17,7 @@ import admissionRoutes from './routes/admissionApplication.routes.js';
 import responsibilityRoutes from './routes/responsibility.routes.js';
 import assignmentRoutes from './routes/responsibilityAssignment.routes.js';
 import applicationRoutes from './routes/application.routes.js';
+import noticesRoutes from './routes/notices.routes.js';
 import helmet from "helmet";
 import pinoHttp from "pino-http";
 import logger from "./utils/logger.js";
@@ -114,6 +115,7 @@ app.use('/api/admissions', admissionRoutes);
 app.use('/api/responsibility', responsibilityRoutes);
 app.use('/api/assign-responsibility', assignmentRoutes);
 app.use('/api/application', applicationRoutes);
+app.use('/api/notices', noticesRoutes);
 
 /* ===================================================
    HEALTH CHECK
