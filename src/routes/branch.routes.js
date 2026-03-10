@@ -13,16 +13,18 @@ import { validateInstitutionJWT } from '../middlewares/institutionAuth.middlewar
 
 const router = Router();
 
-// public routes
+// PUBLIC ROUTES
 router.get('/institutions/:institutionId', getBranchesByInstitution);
-router.get('/:branchId', getBranchById);
 router.get('/departments/:departmentId', getBranchByDepartment);
+router.get('/:branchId', getBranchById);
 
-
+// MANAGEMENT ROUTES
 router.post('/institutions/:institutionId', createBranch);
 router.put('/:branchId', updateBranch);
 router.delete('/:branchId', deleteBranch);
 router.patch('/:branchId/status', changeBranchStatus);
+
+// INSTITUTION-AUTH ROUTES
 router.post("/code-exists", validateInstitutionJWT, checkBranchCodeExists);
 
 export default router;

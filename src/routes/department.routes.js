@@ -13,12 +13,12 @@ import {
 
 const router = Router();
 
-//public routes
+// PUBLIC ROUTES
 router.get("/institution/:institutionId", getDepartmentsByInstitution);
 router.get("/:departmentId", getDepartmentById);
 router.post("/code-exists", validateInstitutionJWT, checkDepartmentCodeExists);
 
-//protected routes
+// PROTECTED ROUTES
 router.post("/create-department", validateInstitutionJWT, createDepartment);
 router.put("/update-department/:departmentId", validateInstitutionJWT, updateDepartment);
 router.delete("/delete-department/:departmentId", validateInstitutionJWT, deleteDepartment);

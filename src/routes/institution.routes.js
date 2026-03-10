@@ -25,13 +25,13 @@ const router = Router();
 
 // PUBLIC ROUTES
 router.get("/", getAllInstitutions);
-router.get("/:institutionId", getInstitutionById);
 router.post("/register", registerInstitution);
-router.post("/login",authLimiter, loginInstitution);
+router.post("/login", authLimiter, loginInstitution);
 router.post("/refresh", refreshAccessToken);
 router.post("/forgot-password", forgotInstitutionPassword);
 router.post("/reset-password/:token", resetInstitutionPassword);
 router.get("/verify-email/:token", verifyInstitutionEmail);
+router.get("/:institutionId", getInstitutionById);
 
 // PROTECTED ROUTES
 router.get("/current-institution", validateInstitutionJWT, getCurrentInstitution);
@@ -53,10 +53,6 @@ router.put(
     validateInstitutionJWT,
     updateInstitution
 );
-router.delete(
-    "/delete/:institutionId",
-    validateInstitutionJWT,
-    deleteInstitution
-);
+router.delete("/delete/:institutionId", validateInstitutionJWT, deleteInstitution);
 
 export default router;

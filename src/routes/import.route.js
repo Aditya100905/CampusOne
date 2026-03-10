@@ -6,8 +6,12 @@ import { FacultyImport, StudentImport } from "../models/import.model.js";
 const upload = multer({ dest: "uploads/" });
 
 const router = express.Router();
+
+// IMPORT ROUTES
 router.post("/students", upload.single("file"), importStudents);
 router.post("/faculty", upload.single("file"), importFaculty);
+
+// IMPORT STATUS ROUTES
 router.get("/students/:id/status", async (req, res) => {
   const record = await StudentImport.findById(req.params.id);
   res.json(record);

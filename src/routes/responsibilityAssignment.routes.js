@@ -1,5 +1,5 @@
 import express from "express";
-import { validateInstitutionJWT } from '../middlewares/institutionAuth.middleware.js';
+import { validateInstitutionJWT } from "../middlewares/institutionAuth.middleware.js";
 import {
     createResponsibilityAssignment,
     getAllAssignments,
@@ -13,12 +13,13 @@ import {
 
 const router = express.Router();
 
-
+// PUBLIC ROUTES
 router.get("/", getAllAssignments);
 router.get("/responsibility/:responsibilityId", getAssignmentsByResponsibility);
 router.get("/user/:userId", getAssignmentsByUser);
 router.get("/active", getActiveAssignments);
 
+// INSTITUTION-AUTH ROUTES
 router.post("/", validateInstitutionJWT, createResponsibilityAssignment);
 router.put("/:id", validateInstitutionJWT, updateResponsibilityAssignment);
 router.patch("/:id/deactivate", validateInstitutionJWT, deactivateAssignment);

@@ -12,9 +12,11 @@ import { validateInstitutionJWT } from "../middlewares/institutionAuth.middlewar
 
 const router = express.Router();
 
+// PUBLIC ROUTES
 router.get("/institution/:institutionId", getResponsibilitiesByInstitution);
 router.get("/:responsibilityId", getResponsibilityById);
 
+// INSTITUTION-AUTH ROUTES
 router.post("/", validateInstitutionJWT, createResponsibility);
 router.put("/:responsibilityId", validateInstitutionJWT, updateResponsibility);
 router.delete("/:responsibilityId", validateInstitutionJWT, deleteResponsibility);

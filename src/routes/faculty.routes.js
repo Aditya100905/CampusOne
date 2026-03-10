@@ -21,10 +21,7 @@ import { validateUserJWT } from "../middlewares/userAuth.middleware.js";
 
 const router = Router();
 
-// Public Routes
-router.get("/:facultyId", getFacultyById);
-
-// Protected Routes
+// INSTITUTION-AUTH ROUTES
 router.post("/", validateInstitutionJWT, createFaculty);
 router.put("/:facultyId", validateInstitutionJWT, editFaculty);
 router.delete("/:facultyId", validateInstitutionJWT, deleteFaculty);
@@ -39,13 +36,16 @@ router.put("/:facultyId/in-charge", validateInstitutionJWT, toggleFacultyInCharg
 router.put("/:facultyId/courses", validateInstitutionJWT, addFacultyCourse);
 router.delete("/:facultyId/courses/:courseId", validateInstitutionJWT, deleteFacultyCourse);
 router.delete("/:facultyId/prev-courses/:courseId", validateInstitutionJWT, deleteFacultyPrevCourse);
-
 router.put("/:facultyId/courses/:courseId/finish", validateInstitutionJWT, finishFacultyCourse);
 
+// USER-SELF ROUTES
 router.put("/self/:facultyId", validateUserJWT, editFaculty);
 router.put("/self/:facultyId/courses", validateUserJWT, addFacultyCourse);
 router.delete("/self/:facultyId/courses/:courseId", validateUserJWT, deleteFacultyCourse);
 router.delete("/self/:facultyId/prev-courses/:courseId", validateUserJWT, deleteFacultyPrevCourse);
 router.put("/self/:facultyId/courses/:courseId/finish", validateUserJWT, finishFacultyCourse);
+
+// PUBLIC ROUTES
+router.get("/:facultyId", getFacultyById);
 
 export default router;

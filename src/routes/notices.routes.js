@@ -17,10 +17,10 @@ const router = Router();
 
 router.post("/", validateInstitutionJWT, upload.array("attachments"), createNotice);
 router.get("/", validateInstitutionJWT, getNotices);
-router.get("/:noticeId", validateInstitutionJWT, getNoticeById);
 router.get("/course/:courseId", validateInstitutionJWT, getNoticeByCourseId);
 router.get("/department/:departmentId", validateInstitutionJWT, getNoticeByDepartmentId);
 router.get("/role/:role", validateInstitutionJWT, getNoticeByRole);
+router.get("/:noticeId", validateInstitutionJWT, getNoticeById);
 router.patch("/:noticeId", validateInstitutionJWT, upload.array("attachments"), updateNotice);
 router.delete("/:noticeId", validateInstitutionJWT, deleteNotice);
 

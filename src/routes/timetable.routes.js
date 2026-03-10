@@ -13,14 +13,15 @@ import { validateInstitutionJWT } from '../middlewares/institutionAuth.middlewar
 
 const router = Router();
 
+// PUBLIC ROUTES
 router.get("/faculty/:facultyId", getFacultyTimetable);
 router.get("/student/:studentId", getStudentTimetable);
 router.get("/institution/:institutionId", getInstitutionTimetable);
 
+// INSTITUTION-AUTH ROUTES
 router.post("/slot", validateInstitutionJWT, createSlot);
 router.patch("/slot/:slotId", validateInstitutionJWT, updateSlot);
 router.delete("/slot/:slotId", validateInstitutionJWT, deleteSlot);
 router.delete("/institution/:institutionId/clear", validateInstitutionJWT, clearInstitutionTimetable);
-
 
 export default router;
