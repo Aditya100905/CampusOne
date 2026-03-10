@@ -24,7 +24,7 @@ import {
 
 const router = Router();
 
-// Public Routes
+// GET ROUTES
 router.get("/faculty/course/:courseId/institution/:institutionId/batch/:batch", findFacultiesByCourseAndBatch);
 router.get("/faculty/prev-course/:courseId/institution/:institutionId/batch/:batch", findFacultiesByPrevCourseAndBatch);
 
@@ -44,11 +44,15 @@ router.get("/department/:departmentId", getCoursesByDepartment);
 router.get("/institution/:institutionId", getCourseByInstitution);
 router.get("/:courseId", getCourseById);
 
-// Protected Routes
+// POST ROUTES
 router.post("/create-course", validateInstitutionJWT, createCourse);
-router.put("/:courseId", validateInstitutionJWT, updateCourse);
-router.delete("/:courseId", validateInstitutionJWT, deleteCourse);
-router.put("/change-status/:courseId", validateInstitutionJWT, modifyStatus);
 router.post("/code-exists", validateInstitutionJWT, checkCourseCodeExists);
+
+// PUT ROUTES
+router.put("/:courseId", validateInstitutionJWT, updateCourse);
+router.put("/change-status/:courseId", validateInstitutionJWT, modifyStatus);
+
+// DELETE ROUTES
+router.delete("/:courseId", validateInstitutionJWT, deleteCourse);
 
 export default router;

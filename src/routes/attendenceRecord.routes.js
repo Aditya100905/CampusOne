@@ -14,7 +14,7 @@ import { validateInstitutionJWT } from "../middlewares/institutionAuth.middlewar
 
 const router = Router();
 
-router.post("/user/:sessionId/mark", validateUserJWT, markAttendance);
+// GET ROUTES
 router.get("/user/student/:studentId/course/:courseId", validateUserJWT, studentCourseAttendance);
 router.get("/user/batch/defaulters", validateUserJWT, batchDefaulters);
 router.get("/user/student/:studentId/report", validateUserJWT, studentFullReport);
@@ -28,5 +28,8 @@ router.get("/student/:studentId/report", validateInstitutionJWT, studentFullRepo
 router.get("/student/:studentId/course/:courseId/datewise", validateInstitutionJWT, studentCourseDatewise);
 router.get("/batch/matrix", validateInstitutionJWT, batchCourseMatrix);
 router.get("/session/:sessionId", validateInstitutionJWT, sessionSlotAttendance);
+
+// POST ROUTES
+router.post("/user/:sessionId/mark", validateUserJWT, markAttendance);
 
 export default router;

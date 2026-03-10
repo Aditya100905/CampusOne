@@ -21,17 +21,21 @@ import { authLimiter } from "../middlewares/rateLimiter.middleware.js";
 
 const router = Router();
 
-// PUBLIC ROUTES
+// GET ROUTES
+router.get("/verify-email/:token", verifyUserEmail);
+router.get("/current-user", validateUserJWT, getCurrentUser);
+router.get(
+    "/faculty",
+    validateUserJWT,
+    getFacultyByUserId
+);
+
+// POST ROUTES
 router.post("/register", validateInstitutionJWT, registerUser);
 router.post("/login", authLimiter, loginUser);
 router.post("/refresh", refreshAccessToken);
 router.post("/forgot-password", forgotUserPassword);
 router.post("/reset-password/:token", resetUserPassword);
-router.get("/verify-email/:token", verifyUserEmail);
-
-// PROTECTED ROUTES
-router.delete("/delete/:userId", validateInstitutionJWT, deleteUser);
-router.get("/current-user", validateUserJWT, getCurrentUser);
 router.post("/logout", validateUserJWT, logoutUser);
 router.post(
     "/send-email-verification",
@@ -44,15 +48,15 @@ router.post(
     upload.single("avatar"),
     updateUserAvatar
 );
+
+// PUT ROUTES
 router.put(
     "/update",
     validateUserJWT,
     updateUser
 );
-router.get(
-    "/faculty",
-    validateUserJWT,
-    getFacultyByUserId
-);
+
+// DELETE ROUTES
+router.delete("/delete/:userId", validateInstitutionJWT, deleteUser);
 
 export default router;

@@ -15,17 +15,21 @@ import { validateUserJWT } from "../middlewares/userAuth.middleware.js";
 
 const router = Router();
 
-// PUBLIC ROUTES
+// GET ROUTES
 router.get("/faculty/:facultyId", getFacultySessions);
 router.get("/student/:studentId", getStudentSessions);
 router.get("/batch", getBatchSessions);
 router.get("/institution/:institutionId", getInstitutionSessions);
 
-// PROTECTED ROUTES
+// POST ROUTES
 router.post("/generate", validateInstitutionJWT, generateSessions);
+router.post("/manual/faculty/:facultyId", validateUserJWT, generateFacultySessionsManual);
+
+// PATCH ROUTES
 router.patch("/:sessionId/cancel", validateUserJWT, cancelSession);
 router.patch("/:sessionId/holiday", validateUserJWT, holidaySession);
+
+// DELETE ROUTES
 router.delete("/:sessionId", validateUserJWT, deleteSession);
-router.post("/manual/faculty/:facultyId", validateUserJWT, generateFacultySessionsManual);
 
 export default router;

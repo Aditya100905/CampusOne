@@ -21,31 +21,30 @@ import { validateUserJWT } from "../middlewares/userAuth.middleware.js";
 
 const router = Router();
 
-// INSTITUTION-AUTH ROUTES
-router.post("/", validateInstitutionJWT, createFaculty);
-router.put("/:facultyId", validateInstitutionJWT, editFaculty);
-router.delete("/:facultyId", validateInstitutionJWT, deleteFaculty);
-
+// GET ROUTES
 router.get("/by-institution/:institutionId", validateInstitutionJWT, getFacultiesByInstitution);
 router.get("/by-department/:departmentId", validateInstitutionJWT, getFacultiesByDepartment);
+router.get("/:facultyId", getFacultyById);
 
+// POST ROUTES
+router.post("/", validateInstitutionJWT, createFaculty);
+
+// PUT ROUTES
+router.put("/:facultyId", validateInstitutionJWT, editFaculty);
 router.put("/:facultyId/department", validateInstitutionJWT, updateFacultyDepartment);
 router.put("/:facultyId/status", validateInstitutionJWT, modifyActiveStatus);
 router.put("/:facultyId/in-charge", validateInstitutionJWT, toggleFacultyInCharge);
-
 router.put("/:facultyId/courses", validateInstitutionJWT, addFacultyCourse);
-router.delete("/:facultyId/courses/:courseId", validateInstitutionJWT, deleteFacultyCourse);
-router.delete("/:facultyId/prev-courses/:courseId", validateInstitutionJWT, deleteFacultyPrevCourse);
 router.put("/:facultyId/courses/:courseId/finish", validateInstitutionJWT, finishFacultyCourse);
-
-// USER-SELF ROUTES
 router.put("/self/:facultyId", validateUserJWT, editFaculty);
 router.put("/self/:facultyId/courses", validateUserJWT, addFacultyCourse);
-router.delete("/self/:facultyId/courses/:courseId", validateUserJWT, deleteFacultyCourse);
-router.delete("/self/:facultyId/prev-courses/:courseId", validateUserJWT, deleteFacultyPrevCourse);
 router.put("/self/:facultyId/courses/:courseId/finish", validateUserJWT, finishFacultyCourse);
 
-// PUBLIC ROUTES
-router.get("/:facultyId", getFacultyById);
+// DELETE ROUTES
+router.delete("/:facultyId", validateInstitutionJWT, deleteFaculty);
+router.delete("/:facultyId/courses/:courseId", validateInstitutionJWT, deleteFacultyCourse);
+router.delete("/:facultyId/prev-courses/:courseId", validateInstitutionJWT, deleteFacultyPrevCourse);
+router.delete("/self/:facultyId/courses/:courseId", validateUserJWT, deleteFacultyCourse);
+router.delete("/self/:facultyId/prev-courses/:courseId", validateUserJWT, deleteFacultyPrevCourse);
 
 export default router;

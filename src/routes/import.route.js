@@ -7,11 +7,7 @@ const upload = multer({ dest: "uploads/" });
 
 const router = express.Router();
 
-// IMPORT ROUTES
-router.post("/students", upload.single("file"), importStudents);
-router.post("/faculty", upload.single("file"), importFaculty);
-
-// IMPORT STATUS ROUTES
+// GET ROUTES
 router.get("/students/:id/status", async (req, res) => {
   const record = await StudentImport.findById(req.params.id);
   res.json(record);
@@ -20,5 +16,9 @@ router.get("/faculty/:id/status", async (req, res) => {
   const record = await FacultyImport.findById(req.params.id);
   res.json(record);
 });
+
+// POST ROUTES
+router.post("/students", upload.single("file"), importStudents);
+router.post("/faculty", upload.single("file"), importFaculty);
 
 export default router;

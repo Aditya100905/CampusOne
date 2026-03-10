@@ -11,6 +11,7 @@ import { Faculty } from '../models/faculty.model.js';
 import { Student } from '../models/student.model.js';
 import assertObjectId from '../utils/assertObjectId.js';
 import  jwt  from 'jsonwebtoken';
+import { RefreshToken } from '../models/refreshToken.model.js';
 
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, phone, password, role, dob } = req.body;
@@ -69,6 +70,18 @@ const loginUser = asyncHandler(async (req, res) => {
 
   const accessToken = user.generateAccessToken();
   const refreshToken = user.generateRefreshToken();
+
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(refreshToken)
+    .digest("hex");
+
+  await RefreshToken.create({
+    userId: user._id,
+    token: hashedToken,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  });
+
   const loggedInUser = await User.findById(user._id).select(
     "-password -resetPasswordToken -emailVerificationToken"
   );
@@ -94,6 +107,19 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
+  const token = req.cookies.refreshToken;
+
+  if (token) {
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
+
+    await RefreshToken.deleteOne({
+      token: hashedToken,
+      userId: req.user._id,
+    });
+  }
 
   res
     .clearCookie("accessToken", cookiesOptions)
@@ -106,17 +132,50 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   if (!token) throw new ApiError("Refresh token missing", 401);
 
   let decoded;
+
   try {
     decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
-  } catch (err) {
-    throw new ApiError("Refresh token expired", 401);
+  } catch {
+    throw new ApiError("Invalid or expired refresh token", 401);
+  }
+
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+
+  const storedToken = await RefreshToken.findOne({
+    token: hashedToken,
+    userId: decoded.id,
+    expiresAt: { $gt: new Date() },
+  });
+
+  if (!storedToken) {
+    throw new ApiError("Invalid refresh token", 401);
   }
 
   const user = await User.findById(decoded.id).select("-password");
+
   if (!user) throw new ApiError("User not found", 404);
+
+  await RefreshToken.deleteOne({
+    token: hashedToken,
+    userId: decoded.id,
+  });
 
   const newAccessToken = user.generateAccessToken();
   const newRefreshToken = user.generateRefreshToken();
+
+  const newHashedToken = crypto
+    .createHash("sha256")
+    .update(newRefreshToken)
+    .digest("hex");
+
+  await RefreshToken.create({
+    userId: user._id,
+    token: newHashedToken,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  });
 
   res
     .cookie("accessToken", newAccessToken, cookiesOptions)

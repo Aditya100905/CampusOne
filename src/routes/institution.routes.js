@@ -23,18 +23,18 @@ import { authLimiter } from "../middlewares/rateLimiter.middleware.js";
 
 const router = Router();
 
-// PUBLIC ROUTES
+// GET ROUTES
 router.get("/", getAllInstitutions);
+router.get("/verify-email/:token", verifyInstitutionEmail);
+router.get("/current-institution", validateInstitutionJWT, getCurrentInstitution);
+router.get("/:institutionId", getInstitutionById);
+
+// POST ROUTES
 router.post("/register", registerInstitution);
 router.post("/login", authLimiter, loginInstitution);
 router.post("/refresh", refreshAccessToken);
 router.post("/forgot-password", forgotInstitutionPassword);
 router.post("/reset-password/:token", resetInstitutionPassword);
-router.get("/verify-email/:token", verifyInstitutionEmail);
-router.get("/:institutionId", getInstitutionById);
-
-// PROTECTED ROUTES
-router.get("/current-institution", validateInstitutionJWT, getCurrentInstitution);
 router.post("/logout", validateInstitutionJWT, logoutInstitution);
 router.post("/code-exists", checkInstitutionCodeExists);
 router.post(
@@ -48,11 +48,15 @@ router.post(
     upload.single("avatar"),
     updateInstitutionAvatar
 );
+
+// PUT ROUTES
 router.put(
     "/update",
     validateInstitutionJWT,
     updateInstitution
 );
+
+// DELETE ROUTES
 router.delete("/delete/:institutionId", validateInstitutionJWT, deleteInstitution);
 
 export default router;

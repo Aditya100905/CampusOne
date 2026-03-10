@@ -13,16 +13,20 @@ import {
 
 const router = Router();
 
-// PUBLIC ROUTES
+// GET ROUTES
 router.get("/institution/:institutionId", getDepartmentsByInstitution);
 router.get("/:departmentId", getDepartmentById);
-router.post("/code-exists", validateInstitutionJWT, checkDepartmentCodeExists);
 
-// PROTECTED ROUTES
+// POST ROUTES
+router.post("/code-exists", validateInstitutionJWT, checkDepartmentCodeExists);
 router.post("/create-department", validateInstitutionJWT, createDepartment);
-router.put("/update-department/:departmentId", validateInstitutionJWT, updateDepartment);
-router.delete("/delete-department/:departmentId", validateInstitutionJWT, deleteDepartment);
 router.post("/add-hod/:departmentId", validateInstitutionJWT, addHod);
 router.post("/remove-hod/:departmentId", validateInstitutionJWT, removeHod);
+
+// PUT ROUTES
+router.put("/update-department/:departmentId", validateInstitutionJWT, updateDepartment);
+
+// DELETE ROUTES
+router.delete("/delete-department/:departmentId", validateInstitutionJWT, deleteDepartment);
 
 export default router;

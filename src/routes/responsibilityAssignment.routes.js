@@ -13,16 +13,22 @@ import {
 
 const router = express.Router();
 
-// PUBLIC ROUTES
+// GET ROUTES
 router.get("/", getAllAssignments);
 router.get("/responsibility/:responsibilityId", getAssignmentsByResponsibility);
 router.get("/user/:userId", getAssignmentsByUser);
 router.get("/active", getActiveAssignments);
 
-// INSTITUTION-AUTH ROUTES
+// POST ROUTES
 router.post("/", validateInstitutionJWT, createResponsibilityAssignment);
+
+// PUT ROUTES
 router.put("/:id", validateInstitutionJWT, updateResponsibilityAssignment);
+
+// PATCH ROUTES
 router.patch("/:id/deactivate", validateInstitutionJWT, deactivateAssignment);
+
+// DELETE ROUTES
 router.delete("/:id", validateInstitutionJWT, deleteAssignment);
 
 export default router;

@@ -145,7 +145,7 @@ const logoutInstitution = asyncHandler(async (req, res) => {
       .update(token)
       .digest("hex");
 
-    await RefreshToken.deleteOne({ token: hashedToken });
+   await RefreshToken.deleteOne({ token: hashedToken, institutionId: req.institution._id});
   }
 
   res
@@ -171,9 +171,10 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     .digest("hex");
 
   const storedToken = await RefreshToken.findOne({
-    token: hashedToken,
-    institutionId: decoded.id
-  });
+  token: hashedToken,
+  institutionId: decoded.id,
+  expiresAt: { $gt: new Date() }
+});
 
   if (!storedToken) {
     throw new ApiError("Invalid refresh token", 401);
@@ -184,7 +185,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   if (!institution) {
     throw new ApiError("Institution not found", 404);
   }
-  await RefreshToken.deleteOne({ token: hashedToken });
+  await RefreshToken.deleteOne({ token: hashedToken, institutionId: req.institution._id });
 
   const newAccessToken = institution.generateAccessToken();
   const newRefreshToken = institution.generateRefreshToken();

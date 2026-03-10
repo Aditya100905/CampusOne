@@ -10,10 +10,13 @@ import { validateUserJWT } from "../middlewares/userAuth.middleware.js";
 
 const router = Router();
 
-router.post("/record", validateUserJWT, recordMarks);
+// GET ROUTES
 router.get("/course/:courseId/components", validateUserJWT, getBatchCourseComponents);
 router.get("/matrix", validateUserJWT, getBatchCourseMatrix);
 router.get("/student/:studentId/all", validateUserJWT, getStudentMarksLine);
 router.get("/student/:studentId/course/:courseId", validateUserJWT, getStudentCourseDetail);
+
+// POST ROUTES
+router.post("/record", validateUserJWT, recordMarks);
 
 export default router;

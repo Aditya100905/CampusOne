@@ -22,19 +22,21 @@ import {
 
 const router = express.Router();
 
-// HOSTEL ROUTES
-router.post("/", validateInstitutionJWT, createHostel);
+// GET ROUTES
 router.get("/", validateInstitutionJWT, getHostels);
+router.get("/allocations/student/:studentId", validateInstitutionJWT, getStudentRoom);
+router.get("/:hostelId/rooms", validateInstitutionJWT, getRoomsByHostel);
 router.get("/:hostelId", validateInstitutionJWT, getHostelById);
 
-// ROOM ROUTES
+// POST ROUTES
+router.post("/", validateInstitutionJWT, createHostel);
 router.post("/rooms", validateInstitutionJWT, createRoom);
-router.put("/rooms/:roomId", validateInstitutionJWT, updateRoom);
-router.get("/:hostelId/rooms", validateInstitutionJWT, getRoomsByHostel);
-
-// ALLOCATION ROUTES
 router.post("/allocations", validateInstitutionJWT, allocateRoom);
+
+// PUT ROUTES
+router.put("/rooms/:roomId", validateInstitutionJWT, updateRoom);
+
+// PATCH ROUTES
 router.patch("/allocations/:id/vacate", validateInstitutionJWT, vacateRoom);
-router.get("/allocations/student/:studentId", validateInstitutionJWT, getStudentRoom);
 
 export default router;
