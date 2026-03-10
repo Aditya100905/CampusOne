@@ -15,6 +15,7 @@ import mongoose from "mongoose";
 import { User } from '../models/user.model.js';
 import Course from "../models/course.model.js";
 import jwt from "jsonwebtoken";
+import { RefreshToken } from "../models/refreshToken.model.js";
 
 const registerInstitution = asyncHandler(async (req, res) => {
   const {
@@ -108,6 +109,17 @@ const loginInstitution = asyncHandler(async (req, res) => {
   const accessToken = institution.generateAccessToken();
   const refreshToken = institution.generateRefreshToken();
 
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(refreshToken)
+    .digest("hex");
+
+  await RefreshToken.create({
+    institutionId: institution._id,
+    token: hashedToken,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  });
+
   const loggedInInstitution = await Institution.findById(institution._id)
     .select("-password -resetPasswordToken -emailVerificationToken");
 
@@ -119,12 +131,22 @@ const loginInstitution = asyncHandler(async (req, res) => {
     })
     .json(
       new ApiResponse("Login successful", 200, {
-        institution: loggedInInstitution
+        institution: loggedInInstitution,
       })
     );
 });
 
 const logoutInstitution = asyncHandler(async (req, res) => {
+  const token = req.cookies.refreshToken;
+
+  if (token) {
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
+
+    await RefreshToken.deleteOne({ token: hashedToken });
+  }
 
   res
     .clearCookie("accessToken", cookiesOptions)
@@ -139,15 +161,44 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   let decoded;
   try {
     decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
-  } catch (err) {
-    throw new ApiError("Refresh token expired", 401);
+  } catch {
+    throw new ApiError("Invalid or expired refresh token", 401);
+  }
+
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+
+  const storedToken = await RefreshToken.findOne({
+    token: hashedToken,
+    institutionId: decoded.id
+  });
+
+  if (!storedToken) {
+    throw new ApiError("Invalid refresh token", 401);
   }
 
   const institution = await Institution.findById(decoded.id).select("-password");
-  if (!institution) throw new ApiError("User not found", 404);
+
+  if (!institution) {
+    throw new ApiError("Institution not found", 404);
+  }
+  await RefreshToken.deleteOne({ token: hashedToken });
 
   const newAccessToken = institution.generateAccessToken();
   const newRefreshToken = institution.generateRefreshToken();
+
+  const newHashedToken = crypto
+    .createHash("sha256")
+    .update(newRefreshToken)
+    .digest("hex");
+
+  await RefreshToken.create({
+    institutionId: institution._id,
+    token: newHashedToken,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  });
 
   res
     .cookie("accessToken", newAccessToken, cookiesOptions)
@@ -156,7 +207,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     })
     .json(new ApiResponse("Token refreshed", 200));
-})
+});
 
 const updateInstitution = asyncHandler(async (req, res) => {
   const institutionId = req.institution._id;
