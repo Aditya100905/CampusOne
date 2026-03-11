@@ -5,7 +5,7 @@ import logger from "./utils/logger.js";
 import { dbConnect } from "./db/index.js";
 
 let kafkaProducer = null;
-if (process.env.NODE_ENV !== "production") {
+if (process.env.NODE_ENV !== "production" && process.env.NODE_ENV !== "test") {
   const mod = await import("./kafka/producer.js");
   kafkaProducer = mod.kafkaProducer;
 }
@@ -19,7 +19,7 @@ const startServer = async () => {
     await dbConnect();
     logger.info("📦 MongoDB connected");
     
-    if (process.env.NODE_ENV !== "production") {
+    if (process.env.NODE_ENV !== "production" && process.env.NODE_ENV !== "test") {
       await kafkaProducer.connect();
       logger.info("📨 Kafka Producer connected");
     }

@@ -4,7 +4,7 @@ import logger from "../utils/logger.js";
 let kafkaProducer = null;
 
 // Disable Kafka in Production
-if (process.env.NODE_ENV !== "production") {
+if (process.env.NODE_ENV !== "production" && process.env.NODE_ENV !== "test") {
   const kafka = new Kafka({
     clientId: "campusone",
   brokers: ["localhost:9092"],

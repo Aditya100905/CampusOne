@@ -93,7 +93,7 @@ app.use((req, res, next) => {
 /* ===================================================
    LOGGER (DEV ONLY)
 =================================================== */
-if (process.env.NODE_ENV !== "production") {
+if (process.env.NODE_ENV !== "production" && process.env.NODE_ENV !== "test") {
   app.use(pinoHttp({ logger }));
 }
 
@@ -135,7 +135,7 @@ app.get('/health', (req, res) => {
    ROOT ROUTE
 =================================================== */
 app.get('/', (req, res) => {
-  res.send('Hello, World!');
+  res.json('Hello, World!');
 });
 
 /* ===================================================

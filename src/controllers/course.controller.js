@@ -7,6 +7,10 @@ import { Faculty } from "../models/faculty.model.js";
 import mongoose from "mongoose";
 import { Student } from "../models/student.model.js";
 import { Institution } from "../models/institution.model.js";
+import { TimetableSlot } from '../models/timetable.model.js';
+import { AttendanceRecord } from '../models/attendenceRecord.model.js';
+import { AttendanceSession } from '../models/attendenceSession.model.js';
+import { MarksRecord } from '../models/marksRecord.model.js';
 
 const assertObjectId = (id, field = "id") => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
