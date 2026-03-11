@@ -1,5 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import crypto from "crypto";
 
 const documentSchema = new Schema({
     type: {
@@ -7,6 +9,10 @@ const documentSchema = new Schema({
         required: true
     },
     fileUrl: {
+        type: String,
+        required: true
+    },
+    publicId: {
         type: String,
         required: true
     },
@@ -178,7 +184,7 @@ const admissionApplicationSchema = new mongoose.Schema({
             "FINAL_APPROVED",
             "FINAL_REJECTED"
         ],
-        default: "SUBMITTED"
+        default: "DRAFT"
     },
     resetPasswordToken: {
         type: String,

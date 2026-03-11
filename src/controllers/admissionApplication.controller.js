@@ -5,9 +5,12 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { cookiesOptions } from "../utils/cookiesOptions.js";
 import { AdmissionApplication } from "../models/admissionApplication.model.js";
+import sendEmail from "../utils/sendEmail.js";
+import cloudinary from "../utils/cloudinary.js";
+import streamifier from "streamifier";
 
 const generateApplicationNumber = () => {
-  return "APP-" + crypto.randomBytes(4).toString("hex").toUpperCase();
+  return "APP-" + crypto.randomBytes(6).toString("hex").toUpperCase();
 };
 
 const registerAdmissionApplication = asyncHandler(async (req, res) => {
@@ -160,7 +163,8 @@ const getApplicationStatusByNumber = asyncHandler(async (req, res) => {
 
   const { applicationNumber } = req.params;
 
-  const application = await AdmissionApplication.findOne({ applicationNumber });
+  const application = await AdmissionApplication.findOne({ applicationNumber })
+    .select("-password -resetPasswordToken -emailVerificationToken");
 
   if (!application) {
     throw new ApiError("Application not found", 404);
@@ -169,27 +173,39 @@ const getApplicationStatusByNumber = asyncHandler(async (req, res) => {
   res.json(
     new ApiResponse("Application status fetched", 200, application)
   );
-
 });
 
 const updateAdmissionApplication = asyncHandler(async (req, res) => {
 
   const applicationId = req.user.id;
-
+  const allowedFields = [
+    "fullName",
+    "fatherName",
+    "motherName",
+    "phone",
+    "address",
+    "city",
+    "state",
+    "pincode"
+  ];
+  const updateData = {};
+  allowedFields.forEach(field => {
+    if (req.body[field] !== undefined) {
+      updateData[field] = req.body[field];
+    }
+  });
   const application = await AdmissionApplication.findByIdAndUpdate(
     applicationId,
-    req.body,
+    updateData,
     { new: true }
   ).select("-password");
 
   if (!application) {
     throw new ApiError("Application not found", 404);
   }
-
   res.json(
     new ApiResponse("Application updated successfully", 200, application)
   );
-
 });
 
 const updateAdmissionApplicationStatus = asyncHandler(async (req, res) => {
@@ -371,8 +387,8 @@ const getApplicationsByInstituteAndBranch = asyncHandler(async (req, res) => {
     branchId
   }).select("-password -resetPasswordToken -emailVerificationToken");
 
-  if (!applications) {
-    throw new ApiError("Application not found", 404);
+  if (applications.length === 0) {
+    throw new ApiError("No applications found", 404);
   }
 
   res.json(
@@ -386,14 +402,14 @@ const getApplicationsByInstituteAndBranch = asyncHandler(async (req, res) => {
 
 
 const getApplicationsByInstitute = asyncHandler(async (req, res) => {
+
   const { institutionId } = req.params;
 
-  const applications = await AdmissionApplication.find({
-    institutionId
-  }).select("-password -resetPasswordToken -emailVerificationToken");
+  const applications = await AdmissionApplication.find({ institutionId })
+    .select("-password -resetPasswordToken -emailVerificationToken");
 
-  if (!applications) {
-    throw new ApiError("Application not found", 404);
+  if (applications.length === 0) {
+    throw new ApiError("No applications found", 404);
   }
 
   res.json(
@@ -425,6 +441,276 @@ const getApplicationById = asyncHandler(async (req, res) => {
   );
 });
 
+const uploadApplicationDocument = asyncHandler(async (req, res) => {
+
+  const { applicationId } = req.params;
+  const { documentType } = req.body;
+
+  if (!documentType) {
+    throw new ApiError("Document type is required", 400);
+  }
+
+  const application = await AdmissionApplication.findById(applicationId);
+
+  if (!application) {
+    throw new ApiError("Application not found", 404);
+  }
+
+  if (!req.file) {
+    throw new ApiError("No file uploaded", 400);
+  }
+
+  const uploadResult = await new Promise((resolve, reject) => {
+
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        resource_type: "auto",
+        folder: "admission_documents"
+      },
+      (error, result) => {
+
+        if (error) return reject(error);
+        resolve(result);
+
+      }
+    );
+
+    streamifier.createReadStream(req.file.buffer).pipe(stream);
+
+  });
+
+  application.documents.push({
+    type: documentType,
+    fileUrl: uploadResult.secure_url,
+    publicId: uploadResult.public_id
+  });
+
+  await application.save();
+
+  res.json(
+    new ApiResponse("Document uploaded successfully", 200, {
+      documentType,
+      url: uploadResult.secure_url
+    })
+  );
+
+});
+
+const deleteApplicationDocument = asyncHandler(async (req, res) => {
+
+  const { applicationId, documentId } = req.params;
+
+  const application = await AdmissionApplication.findById(applicationId);
+
+  if (!application) {
+    throw new ApiError("Application not found", 404);
+  }
+
+  const document = application.documents.id(documentId);
+
+  if (!document) {
+    throw new ApiError("Document not found", 404);
+  }
+
+  if (document.publicId) {
+    await cloudinary.uploader.destroy(document.publicId);
+  }
+  document.remove();
+
+  await application.save();
+
+  res.json(
+    new ApiResponse("Document deleted successfully", 200)
+  );
+
+});
+
+const updateApplicationDocumentStatus = asyncHandler(async (req, res) => {
+  const { applicationId, documentId } = req.params;
+  const { status, percentage } = req.body;
+
+  if (!status) {
+    throw new ApiError("Status is required", 400);
+  }
+
+  const application = await AdmissionApplication.findById(applicationId);
+
+  if (!application) {
+    throw new ApiError("Application not found", 404);
+  }
+
+  const document = application.documents.id(documentId);
+  if (!document) {
+    throw new ApiError("Document not found", 404);
+  }
+
+  document.verifiedStatus = status;
+
+  if (percentage !== undefined) {
+    const numericPercentage = Number(percentage);
+
+    if (!Number.isFinite(numericPercentage) || numericPercentage < 0 || numericPercentage > 100) {
+      throw new ApiError("Percentage must be a number between 0 and 100", 400);
+    }
+
+    document.verifiedPercentage = numericPercentage;
+  }
+
+  await application.save();
+
+  res.json(new ApiResponse("Document status updated successfully", 200));
+});
+
+const submitAdmissionApplication = asyncHandler(async (req, res) => {
+
+  const application = await AdmissionApplication.findById(req.user.id);
+
+  if (!application) {
+    throw new ApiError("Application not found", 404);
+  }
+
+  if (application.formStatus !== "DRAFT") {
+    throw new ApiError("Application already submitted", 400);
+  }
+
+  application.formStatus = "SUBMITTED";
+
+  application.reviewLogs.push({
+    message: "Application submitted by applicant"
+  });
+
+  await application.save();
+
+  res.json(
+    new ApiResponse("Application submitted successfully", 200, application)
+  );
+
+});
+
+const approveAdmissionApplication = asyncHandler(async (req, res) => {
+
+  const { applicationId } = req.params;
+
+  const application = await AdmissionApplication.findById(applicationId);
+
+  if (!application) {
+    throw new ApiError("Application not found", 404);
+  }
+
+  application.formStatus = "FINAL_APPROVED";
+
+  application.reviewLogs.push({
+    message: "Application approved by admin"
+  });
+
+  await application.save();
+
+  res.json(
+    new ApiResponse("Application approved successfully", 200, application)
+  );
+
+});
+
+const rejectAdmissionApplication = asyncHandler(async (req, res) => {
+
+  const { applicationId } = req.params;
+  const { reason } = req.body;
+
+  const application = await AdmissionApplication.findById(applicationId);
+
+  if (!application) {
+    throw new ApiError("Application not found", 404);
+  }
+
+  if (
+    application.formStatus === "DRAFT" ||
+    application.formStatus === "FINAL_APPROVED" ||
+    application.formStatus === "FINAL_REJECTED"
+  ) {
+    throw new ApiError(
+      "Application cannot be rejected in its current status",
+      400
+    );
+  }
+  application.formStatus = "FINAL_REJECTED";
+
+  application.reviewLogs.push({
+    message: reason || "Application rejected by admin"
+  });
+
+  await application.save();
+
+  res.json(
+    new ApiResponse("Application rejected successfully", 200, application)
+  );
+
+});
+
+const getApplicationsWithFilters = asyncHandler(async (req, res) => {
+
+  const {
+    institutionId,
+    branchId,
+    formStatus,
+    page = 1,
+    limit = 10
+  } = req.query;
+
+  const query = {};
+
+  if (institutionId) query.institutionId = institutionId;
+  if (branchId) query.branchId = branchId;
+  if (formStatus) query.formStatus = formStatus;
+
+  const pageNum = Number(page);
+  const limitNum = Number(limit);
+
+  const applications = await AdmissionApplication.find(query)
+    .skip((pageNum - 1) * limitNum)
+    .limit(limitNum)
+    .select("-password -resetPasswordToken -emailVerificationToken");
+
+  const total = await AdmissionApplication.countDocuments(query);
+
+  res.json(
+    new ApiResponse("Applications fetched successfully", 200, {
+      total,
+      page: pageNum,
+      limit: limitNum,
+      applications
+    })
+  );
+
+});
+
+const updateformStatus = asyncHandler(async (req, res) => {
+  const { applicationId } = req.params;
+  const { formStatus } = req.body;
+  const application = await AdmissionApplication.findById(applicationId);
+  if (!application) {
+    throw new ApiError("Application not found", 404);
+  }
+  const validStatuses = [
+    "DRAFT",
+    "SUBMITTED",
+    "UNDER_AI_REVIEW",
+    "AI_APPROVED",
+    "AI_REJECTED",
+    "MANUAL_REVIEW",
+    "FINAL_APPROVED",
+    "FINAL_REJECTED"
+  ];
+  if (!validStatuses.includes(formStatus)) {
+    throw new ApiError("Invalid form status", 400);
+  }
+  application.formStatus = formStatus;
+  await application.save();
+  res.json(
+    new ApiResponse("Application status updated successfully", 200, application)
+  );
+});
+
+
 
 export {
   registerAdmissionApplication,
@@ -443,5 +729,13 @@ export {
   verifyAdmissionEmail,
   getApplicationById,
   getApplicationsByInstitute,
-  getApplicationsByInstituteAndBranch
+  getApplicationsByInstituteAndBranch,
+  uploadApplicationDocument,
+  deleteApplicationDocument,
+  updateApplicationDocumentStatus,
+  submitAdmissionApplication,
+  approveAdmissionApplication,
+  rejectAdmissionApplication,
+  getApplicationsWithFilters,
+  updateformStatus
 };
