@@ -12,6 +12,9 @@ export const validateInstitutionJWT = asyncHandler(async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded.id) {
+      throw new ApiError("Invalid access token", 401);
+    }
 
     const institution = await Institution.findById(decoded.id).select(
       "-password -resetPasswordToken -emailVerificationToken"

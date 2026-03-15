@@ -10,6 +10,7 @@ export const validateUserJWT = asyncHandler(async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded.id) throw new ApiError("Invalid token", 401);
 
     const user = await User.findById(decoded.id).select("-password -resetPasswordToken -emailVerificationToken");
     if (!user) throw new ApiError("User not found", 401);
