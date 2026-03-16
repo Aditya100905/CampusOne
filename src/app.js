@@ -20,6 +20,7 @@ import applicationRoutes from './routes/application.routes.js';
 import noticesRoutes from './routes/notices.routes.js';
 import hostelRoutes from './routes/hostel.routes.js';
 import bookRoutes from './routes/book.routes.js';
+import campusLogRoutes from './routes/campusLogs.routes.js';
 import helmet from "helmet";
 import pinoHttp from "pino-http";
 import logger from "./utils/logger.js";
@@ -120,6 +121,7 @@ app.use('/api/application', applicationRoutes);
 app.use('/api/notices', noticesRoutes);
 app.use('/api/hostel', hostelRoutes);
 app.use('/api/books', bookRoutes);
+app.use('/api/campusLogs', campusLogRoutes);
 
 /* ===================================================
    HEALTH CHECK
