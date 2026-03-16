@@ -70,7 +70,13 @@ const instituitonSchema = new mongoose.Schema(
         emailVerificationTokenExpires: {
             type: Date,
             default: null
-        }
+        },
+        jnfLink: [
+            {
+                name: { type: String },
+                link: { type: String }
+            }
+        ]
     },
     {
         timestamps: true

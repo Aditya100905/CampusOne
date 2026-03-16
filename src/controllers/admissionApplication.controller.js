@@ -400,7 +400,6 @@ const getApplicationsByInstituteAndBranch = asyncHandler(async (req, res) => {
   );
 });
 
-
 const getApplicationsByInstitute = asyncHandler(async (req, res) => {
 
   const { institutionId } = req.params;
@@ -420,7 +419,6 @@ const getApplicationsByInstitute = asyncHandler(async (req, res) => {
     )
   );
 });
-
 
 const getApplicationById = asyncHandler(async (req, res) => {
   const { applicationId } = req.params;
@@ -450,18 +448,18 @@ const uploadApplicationDocument = asyncHandler(async (req, res) => {
     throw new ApiError("Document type is required", 400);
   }
 
+  const application = await AdmissionApplication.findById(applicationId);
+
+  if (!application) {
+    throw new ApiError("Application not found", 404);
+  }
+
   const existingDoc = application.documents.find(
     doc => doc.type === documentType
   );
 
   if (existingDoc) {
     throw new ApiError("Document of this type already uploaded", 400);
-  }
-
-  const application = await AdmissionApplication.findById(applicationId);
-
-  if (!application) {
-    throw new ApiError("Application not found", 404);
   }
 
   if (!req.file) {
