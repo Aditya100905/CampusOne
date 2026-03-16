@@ -15,7 +15,6 @@ export const validateAdmissionJWT = asyncHandler(async (req, res, next) => {
         const user = await AdmissionApplication.findById(decoded.id).select("-password -resetPasswordToken -emailVerificationToken");
         if (!user) throw new ApiError("User not found", 401);
 
-        if (!user.active) throw new ApiError("User disabled", 403);
         req.user = user;
         next();
     } catch (err) {

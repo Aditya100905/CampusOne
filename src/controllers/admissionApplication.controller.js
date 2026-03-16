@@ -450,6 +450,14 @@ const uploadApplicationDocument = asyncHandler(async (req, res) => {
     throw new ApiError("Document type is required", 400);
   }
 
+  const existingDoc = application.documents.find(
+    doc => doc.type === documentType
+  );
+
+  if (existingDoc) {
+    throw new ApiError("Document of this type already uploaded", 400);
+  }
+
   const application = await AdmissionApplication.findById(applicationId);
 
   if (!application) {
@@ -498,7 +506,7 @@ const uploadApplicationDocument = asyncHandler(async (req, res) => {
 
 const deleteApplicationDocument = asyncHandler(async (req, res) => {
 
-  const { applicationId, documentId } = req.params;
+  const { applicationId, publicId } = req.params;
 
   const application = await AdmissionApplication.findById(applicationId);
 
@@ -506,7 +514,7 @@ const deleteApplicationDocument = asyncHandler(async (req, res) => {
     throw new ApiError("Application not found", 404);
   }
 
-  const document = application.documents.id(documentId);
+  const document = application.documents.find(doc => doc.publicId === publicId);
 
   if (!document) {
     throw new ApiError("Document not found", 404);
@@ -515,7 +523,10 @@ const deleteApplicationDocument = asyncHandler(async (req, res) => {
   if (document.publicId) {
     await cloudinary.uploader.destroy(document.publicId);
   }
-  document.remove();
+
+  application.documents = application.documents.filter(
+    doc => doc.publicId !== publicId
+  );
 
   await application.save();
 
@@ -526,7 +537,7 @@ const deleteApplicationDocument = asyncHandler(async (req, res) => {
 });
 
 const updateApplicationDocumentStatus = asyncHandler(async (req, res) => {
-  const { applicationId, documentId } = req.params;
+  const { applicationId, publicId } = req.params;
   const { status, percentage } = req.body;
 
   if (!status) {
@@ -539,7 +550,8 @@ const updateApplicationDocumentStatus = asyncHandler(async (req, res) => {
     throw new ApiError("Application not found", 404);
   }
 
-  const document = application.documents.id(documentId);
+  const document = application.documents.find(doc => doc.publicId === publicId);
+
   if (!document) {
     throw new ApiError("Document not found", 404);
   }
@@ -550,7 +562,7 @@ const updateApplicationDocumentStatus = asyncHandler(async (req, res) => {
     const numericPercentage = Number(percentage);
 
     if (!Number.isFinite(numericPercentage) || numericPercentage < 0 || numericPercentage > 100) {
-      throw new ApiError("Percentage must be a number between 0 and 100", 400);
+      throw new ApiError("Percentage must be between 0 and 100", 400);
     }
 
     document.verifiedPercentage = numericPercentage;
