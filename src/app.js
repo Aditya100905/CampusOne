@@ -21,6 +21,10 @@ import noticesRoutes from './routes/notices.routes.js';
 import hostelRoutes from './routes/hostel.routes.js';
 import bookRoutes from './routes/book.routes.js';
 import campusLogRoutes from './routes/campusLogs.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
+import alumniRoutes from './routes/alumni.routes.js';
+import referralRoutes from './routes/referral.routes.js';
+import driveRoutes from './routes/drive.routes.js';
 import helmet from "helmet";
 import pinoHttp from "pino-http";
 import logger from "./utils/logger.js";
@@ -122,6 +126,10 @@ app.use('/api/notices', noticesRoutes);
 app.use('/api/hostel', hostelRoutes);
 app.use('/api/books', bookRoutes);
 app.use('/api/campusLogs', campusLogRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/alumni', alumniRoutes);
+app.use('/api/referrals', referralRoutes);
+app.use('/api/drive', driveRoutes);
 
 /* ===================================================
    HEALTH CHECK

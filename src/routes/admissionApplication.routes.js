@@ -30,6 +30,7 @@ import { validateAdmissionJWT } from "../middlewares/admissionAuth.middleware.js
 import { validateInstitutionJWT } from "../middlewares/institutionAuth.middleware.js";
 import { authLimiter } from "../middlewares/rateLimiter.middleware.js";
 import { upload } from '../middlewares/multer.middleware.js';
+import { validateUserJWT } from '../middlewares/userAuth.middleware.js';
 
 const router = express.Router();
 
@@ -59,11 +60,13 @@ router.put("/me", validateAdmissionJWT, updateAdmissionApplication);
 router.put("/:applicationId/status", validateInstitutionJWT, updateAdmissionApplicationStatus);
 router.put("/:applicationId/approve", validateInstitutionJWT, approveAdmissionApplication);
 router.put("/:applicationId/reject", validateInstitutionJWT, rejectAdmissionApplication);
-router.put("/:applicationId/document/:documentId/status", validateInstitutionJWT, updateApplicationDocumentStatus);
 router.put("/:applicationId/form-status", validateInstitutionJWT, updateformStatus);
+
+router.put("/:applicationId/document/:publicId/status", validateInstitutionJWT, updateApplicationDocumentStatus);
+router.put('/:applicationId/document-status/:publicId', validateUserJWT, updateApplicationDocumentStatus);
 
 // DELETE ROUTES
 router.delete("/:applicationId", validateInstitutionJWT, deleteAdmissionApplication);
-router.delete("/:applicationId/document/:documentId", validateAdmissionJWT, deleteApplicationDocument);
+router.delete("/:applicationId/document/:publicId", validateAdmissionJWT, deleteApplicationDocument);
 
 export default router;
