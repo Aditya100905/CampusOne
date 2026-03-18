@@ -32,9 +32,11 @@ const registerAdmissionApplication = asyncHandler(async (req, res) => {
     pincode,
     tenthMarks,
     tenthBoard,
+    tenthRollNumber,
     tenthPassingYear,
     twelfthMarks,
     twelfthBoard,
+    twelfthRollNumber,
     twelfthPassingYear,
     aadharNo
   } = req.body;
@@ -45,7 +47,8 @@ const registerAdmissionApplication = asyncHandler(async (req, res) => {
     !dateOfBirth || !gender || !category ||
     !address || !city || !state || !pincode ||
     !tenthMarks || !tenthBoard || !tenthPassingYear ||
-    !twelfthMarks || !twelfthBoard || !twelfthPassingYear || !aadharNo) {
+    !tenthRollNumber || !twelfthRollNumber || !twelfthMarks ||
+    !twelfthBoard || !twelfthPassingYear || !aadharNo) {
     throw new ApiError("All required fields must be provided", 400);
   }
 
@@ -502,6 +505,76 @@ const uploadApplicationDocument = asyncHandler(async (req, res) => {
 
 });
 
+// update Application Document - file, status, percentage and extracted data
+const updateApplicationDocument = asyncHandler(async (req, res) => {
+
+  const { applicationId, publicId } = req.params;
+  const { status, percentage, extractedData } = req.body;
+
+  const application = await AdmissionApplication.findById(applicationId);
+
+  if (!application) {
+    throw new ApiError("Application not found", 404);
+  }
+
+  const document = application.documents.find(doc => doc.publicId === publicId);
+
+  if (!document) {
+    throw new ApiError("Document not found", 404);
+  }
+
+  if (req.file) {
+    await cloudinary.uploader.destroy(document.publicId);
+
+    const uploadResult = await new Promise((resolve, reject) => {
+
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: "auto",
+          folder: "admission_documents"
+        },
+        (error, result) => {
+
+          if (error) return reject(error);
+          resolve(result);
+
+        }
+      );
+
+      streamifier.createReadStream(req.file.buffer).pipe(stream);
+
+    });
+
+    document.fileUrl = uploadResult.secure_url;
+    document.publicId = uploadResult.public_id;
+  }
+
+  if (status) {
+    document.verifiedStatus = status;
+  }
+
+  if (percentage !== undefined) {
+    const numericPercentage = Number(percentage);
+
+    if (!Number.isFinite(numericPercentage) || numericPercentage < 0 || numericPercentage > 100) {
+      throw new ApiError("Percentage must be between 0 and 100", 400);
+    }
+
+    document.verifiedPercentage = numericPercentage;
+  }
+
+  if (extractedData) {
+    document.extractedData = extractedData;
+  }
+
+  await application.save();
+
+  res.json(
+    new ApiResponse("Document updated successfully", 200, document)
+  );
+
+});
+
 const deleteApplicationDocument = asyncHandler(async (req, res) => {
 
   const { applicationId, publicId } = req.params;
@@ -743,6 +816,7 @@ export {
   uploadApplicationDocument,
   deleteApplicationDocument,
   updateApplicationDocumentStatus,
+  updateApplicationDocument,
   submitAdmissionApplication,
   approveAdmissionApplication,
   rejectAdmissionApplication,
