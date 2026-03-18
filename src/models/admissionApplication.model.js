@@ -112,6 +112,10 @@ const admissionApplicationSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    tenthRollNumber: {
+        type: String,
+        required: true
+    },
     tenthPassingYear: {
         type: Number,
         required: true
@@ -121,6 +125,10 @@ const admissionApplicationSchema = new mongoose.Schema({
         required: true
     },
     twelfthBoard: {
+        type: String,
+        required: true
+    },
+    twelfthRollNumber: {
         type: String,
         required: true
     },

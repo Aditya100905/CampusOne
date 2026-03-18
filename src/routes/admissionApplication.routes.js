@@ -24,13 +24,13 @@ import {
     uploadApplicationDocument,
     deleteApplicationDocument,
     updateApplicationDocumentStatus,
-    updateformStatus
+    updateformStatus,
+    updateApplicationDocument
 } from "../controllers/admissionApplication.controller.js";
 import { validateAdmissionJWT } from "../middlewares/admissionAuth.middleware.js";
 import { validateInstitutionJWT } from "../middlewares/institutionAuth.middleware.js";
 import { authLimiter } from "../middlewares/rateLimiter.middleware.js";
 import { upload } from '../middlewares/multer.middleware.js';
-import { validateUserJWT } from '../middlewares/userAuth.middleware.js';
 
 const router = express.Router();
 
@@ -63,7 +63,9 @@ router.put("/:applicationId/reject", validateInstitutionJWT, rejectAdmissionAppl
 router.put("/:applicationId/form-status", validateInstitutionJWT, updateformStatus);
 
 router.put("/:applicationId/document/:publicId/status", validateInstitutionJWT, updateApplicationDocumentStatus);
-router.put('/:applicationId/document-status/:publicId', validateUserJWT, updateApplicationDocumentStatus);
+router.put('/:applicationId/document-status/:publicId', validateAdmissionJWT, updateApplicationDocumentStatus);
+
+router.put('/:applicationId/update-document/:publicId', validateAdmissionJWT, upload.single("document"), updateApplicationDocument);
 
 // DELETE ROUTES
 router.delete("/:applicationId", validateInstitutionJWT, deleteAdmissionApplication);
