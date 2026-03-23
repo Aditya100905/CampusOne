@@ -12,6 +12,7 @@ export const registerStudentService = async (payload) => {
     institutionCode,
     branchCode,
     enrollmentNumber,
+    dob,
     semester,
     admissionYear,
     hostelStatus,
@@ -20,7 +21,7 @@ export const registerStudentService = async (payload) => {
 
   if (
     !name || !email || !phone || !password ||
-    !institutionCode || !branchCode ||
+    !institutionCode || !branchCode ||!dob ||
     !semester || !admissionYear || !enrollmentNumber
   ) {
     throw new Error("Required fields missing");
@@ -56,6 +57,7 @@ export const registerStudentService = async (payload) => {
       name,
       email,
       phone,
+      dob,
       password,
       role: "Student",
       avatar: process.env.BACKEND_URL + "/user.png",

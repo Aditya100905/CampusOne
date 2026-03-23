@@ -60,7 +60,8 @@ router.put("/me", validateAdmissionJWT, updateAdmissionApplication);
 router.put("/:applicationId/status", validateInstitutionJWT, updateAdmissionApplicationStatus);
 router.put("/:applicationId/approve", validateInstitutionJWT, approveAdmissionApplication);
 router.put("/:applicationId/reject", validateInstitutionJWT, rejectAdmissionApplication);
-router.put("/:applicationId/form-status", validateInstitutionJWT, updateformStatus);
+router.put("/:applicationId/form-status", validateAdmissionJWT, updateformStatus);
+router.put("/:applicationId/set-status", validateInstitutionJWT, updateformStatus);
 
 router.put("/:applicationId/document/:publicId/status", validateInstitutionJWT, updateApplicationDocumentStatus);
 router.put('/:applicationId/document-status/:publicId', validateAdmissionJWT, updateApplicationDocumentStatus);

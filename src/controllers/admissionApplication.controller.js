@@ -793,8 +793,6 @@ const updateformStatus = asyncHandler(async (req, res) => {
   );
 });
 
-
-
 export {
   registerAdmissionApplication,
   loginAdmissionApplication,

@@ -23,7 +23,9 @@ const router = Router();
 
 // GET ROUTES
 router.get("/institution/:institutionId", validateInstitutionJWT, getStudentsByInstitution);
+router.get("/institution-faculty/:institutionId", validateUserJWT, getStudentsByInstitution);
 router.get("/branch/:branchId", validateInstitutionJWT, getStudentsByBranch);
+router.get("/branch-faculty/:branchId", validateUserJWT, getStudentsByBranch);
 
 // PUBLIC LAST
 router.get("/:studentId", getStudentById);
@@ -40,7 +42,7 @@ router.put("/delete-prev-courses/:studentId", validateInstitutionJWT, deleteStud
 router.put("/update-hostel-status/:studentId", validateInstitutionJWT, updateHostelStatus);
 router.put("/change-status/:studentId", validateInstitutionJWT, modifyActiveStatus);
 router.put("/finish-courses/:studentId", validateInstitutionJWT, finishCoursesById);
-router.put("/update-semester/:studentId", validateUserJWT, updateStudentSemester);
+router.put("/update-semester/:studentId", validateInstitutionJWT, updateStudentSemester);
 router.put("/student/edit/:studentId", validateUserJWT, editStudent);
 router.put("/student/update-hostel/:studentId", validateUserJWT, updateHostelStatus);
 
