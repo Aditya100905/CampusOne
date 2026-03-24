@@ -12,6 +12,7 @@ export const registerFacultyService = async (payload) => {
         phone,
         password,
         institutionCode,
+        dob,
         departmentCode,
         designation,
         dateOfJoining,
@@ -19,7 +20,7 @@ export const registerFacultyService = async (payload) => {
         isInCharge
     } = payload;
 
-    if (!name || !email || !phone || !password || !institutionCode || !departmentCode || !designation || !dateOfJoining) {
+    if (!name || !email || !phone || !password || !institutionCode || !dob || !departmentCode || !designation || !dateOfJoining) {
         throw new Error("Missing required fields");
     }
 
@@ -45,7 +46,7 @@ export const registerFacultyService = async (payload) => {
     const parsedDate = new Date(`${year}-${month}-${day}`);
 
     const user = await User.create({
-        name, email, phone, password, role: "Faculty"
+        name, email, dob, phone, password, role: "Faculty"
     });
     try {
         const faculty = await Faculty.create({

@@ -175,6 +175,16 @@ const checkBranchCodeExists = asyncHandler(async (req, res) => {
     );
 });
 
+const getDepartmentByBranchId = asyncHandler(async (req, res) => {
+    const { branchId } = req.params;
+    assertObjectId(branchId, "branchId");
+
+    const branch = await Branch.findById(branchId).populate("departmentId", "name code");
+    if (!branch) throw new ApiError("Branch not found", 404);
+
+    res.json(new ApiResponse("Department fetched successfully", 200, branch));
+});
+
 
 export {
     createBranch,
@@ -184,5 +194,6 @@ export {
     updateBranch,
     deleteBranch,
     changeBranchStatus,
-    checkBranchCodeExists
+    checkBranchCodeExists,
+    getDepartmentByBranchId
 };

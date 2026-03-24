@@ -276,63 +276,63 @@ const deleteStudentPrevCourses = asyncHandler(async (req, res) => {
 });
 
 const finishCoursesById = asyncHandler(async (req, res) => {
-  const { studentId } = req.params;
-  const { courseIds } = req.body;
+    const { studentId } = req.params;
+    const { courseIds } = req.body;
 
-  assertObjectId(studentId, "studentId");
+    assertObjectId(studentId, "studentId");
 
-  if (!Array.isArray(courseIds) || courseIds.length === 0) {
-    throw new ApiError("courseIds must be a non-empty array", 400);
-  }
+    if (!Array.isArray(courseIds) || courseIds.length === 0) {
+        throw new ApiError("courseIds must be a non-empty array", 400);
+    }
 
-  const objIds = courseIds.map(id => new mongoose.Types.ObjectId(id));
+    const objIds = courseIds.map(id => new mongoose.Types.ObjectId(id));
 
-  const updated = await Student.findOneAndUpdate(
-    {
-      _id: studentId,
-      courseIds: { $in: objIds }
-    },
-    [
-      {
-        $set: {
-          _toFinish: {
-            $map: {
-              input: {
-                $filter: {
-                  input: "$courseIds",
-                  as: "c",
-                  cond: { $in: ["$$c", objIds] }
+    const updated = await Student.findOneAndUpdate(
+        {
+            _id: studentId,
+            courseIds: { $in: objIds }
+        },
+        [
+            {
+                $set: {
+                    _toFinish: {
+                        $map: {
+                            input: {
+                                $filter: {
+                                    input: "$courseIds",
+                                    as: "c",
+                                    cond: { $in: ["$$c", objIds] }
+                                }
+                            },
+                            as: "cf",
+                            in: { courseId: "$$cf", semester: "$semester" }
+                        }
+                    }
                 }
-              },
-              as: "cf",
-              in: { courseId: "$$cf", semester: "$semester" }
-            }
-          }
-        }
-      },
-      {
-        $set: {
-          prevCourses: {
-            $setUnion: ["$prevCourses", "$_toFinish"]
-          },
-          courseIds: {
-            $filter: {
-              input: "$courseIds",
-              as: "c",
-              cond: { $not: { $in: ["$$c", objIds] } }
-            }
-          }
-        }
-      },
-      { $unset: "_toFinish" }
-    ],
-    { new: true, updatePipeline: true }
-  );
+            },
+            {
+                $set: {
+                    prevCourses: {
+                        $setUnion: ["$prevCourses", "$_toFinish"]
+                    },
+                    courseIds: {
+                        $filter: {
+                            input: "$courseIds",
+                            as: "c",
+                            cond: { $not: { $in: ["$$c", objIds] } }
+                        }
+                    }
+                }
+            },
+            { $unset: "_toFinish" }
+        ],
+        { new: true, updatePipeline: true }
+    );
 
-  if (!updated)
-    throw new ApiError("Student not found or no matching courseIds", 404);
+    if (!updated)
+        throw new ApiError("Student not found or no matching courseIds", 404);
 
-  res.json(new ApiResponse("Courses finished successfully", 200, updated));
+    res.json(new ApiResponse("Courses finished successfully", 200, updated));
 });
 
 const updateStudentSemester = asyncHandler(async (req, res) => {

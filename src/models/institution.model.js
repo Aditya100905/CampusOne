@@ -67,6 +67,10 @@ const instituitonSchema = new mongoose.Schema(
             type: String,
             default: null
         },
+        isAcceptingApplication: {
+            type: Boolean,
+            default: false
+        },
         emailVerificationTokenExpires: {
             type: Date,
             default: null
