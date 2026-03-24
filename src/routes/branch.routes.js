@@ -7,7 +7,8 @@ import {
   getBranchByDepartment,
   getBranchById,
   getBranchesByInstitution,
-  updateBranch
+  updateBranch,
+  getDepartmentByBranchId
 } from '../controllers/branch.controller.js';
 import { validateInstitutionJWT } from '../middlewares/institutionAuth.middleware.js';
 
@@ -16,6 +17,7 @@ const router = Router();
 // GET ROUTES
 router.get('/institutions/:institutionId', getBranchesByInstitution);
 router.get('/departments/:departmentId', getBranchByDepartment);
+router.get('/branches/:branchId/department', getDepartmentByBranchId);
 router.get('/:branchId', getBranchById);
 
 // POST ROUTES

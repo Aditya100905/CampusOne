@@ -55,6 +55,11 @@ router.put(
     validateInstitutionJWT,
     updateInstitution
 );
+router.put(
+    "/toggle-application-status",
+    validateInstitutionJWT,
+    toggleApplicationStatus
+);
 
 // DELETE ROUTES
 router.delete("/delete/:institutionId", validateInstitutionJWT, deleteInstitution);

@@ -572,6 +572,24 @@ const checkInstitutionCodeExists = asyncHandler(async (req, res) => {
   );
 });
 
+const toggleApplicationStatus = asyncHandler(async (req, res) => {
+  const institutionId = req.institution._id;
+  const institution = await Institution.findById(institutionId);
+  if (!institution) {
+    throw new ApiError("Institution not found", 404);
+  }
+
+  institution.isAcceptingApplication = !institution.isAcceptingApplication;
+  await institution.save();
+
+  res.json(
+    new ApiResponse(
+      `Institution is now ${institution.isAcceptingApplication ? "accepting" : "not accepting"} applications`,
+      200,
+      { isAcceptingApplication: institution.isAcceptingApplication }
+    )
+  );
+});
 
 export {
   registerInstitution,
@@ -588,5 +606,6 @@ export {
   getAllInstitutions,
   getInstitutionById,
   deleteInstitution,
-  checkInstitutionCodeExists
+  checkInstitutionCodeExists,
+  toggleApplicationStatus
 };
