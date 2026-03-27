@@ -73,27 +73,63 @@ const createStudent = asyncHandler(async (req, res) => {
 
 const editStudent = asyncHandler(async (req, res) => {
     const { studentId } = req.params;
+    const { userId, name, phone, dob } = req.body;
 
     assertObjectId(studentId, "studentId");
 
-    delete req.body.userId;
-    delete req.body.institutionId;
-    if (req.body.enrollmentNumber) {
-        throw new ApiError("Enrollment number cannot be changed", 400);
-    }
-
-    const student = await Student.findByIdAndUpdate(
-        studentId,
-        req.body,
-        { new: true }
-    );
-
+    const student = await Student.findById(studentId);
     if (!student) {
         throw new ApiError("Student not found", 404);
     }
 
+    if (req.institution) {
+        if (
+            student.institutionId.toString() !==
+            req.institution._id.toString()
+        ) {
+            throw new ApiError("Unauthorized to edit this student", 403);
+        }
+    }
+
+    if (req.body.enrollmentNumber) {
+        throw new ApiError("Enrollment number cannot be changed", 400);
+    }
+
+    if (req.body.avatar) {
+        throw new ApiError("You do not have permission to change avatar", 400);
+    }
+
+    if (userId && (name || phone || dob)) {
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new ApiError("User not found", 404);
+        }
+
+        if (student.userId.toString() !== user._id.toString()) {
+            throw new ApiError("User does not belong to this student", 400);
+        }
+
+        await User.findByIdAndUpdate(
+            userId,
+            { $set: { name, phone, dob } },
+            { runValidators: true }
+        );
+    }
+
+    delete req.body.userId;
+    delete req.body.institutionId;
+    delete req.body.name;
+    delete req.body.phone;
+    delete req.body.dob;
+
+    const updatedStudent = await Student.findByIdAndUpdate(
+        studentId,
+        { $set: req.body },
+        { new: true, runValidators: true }
+    );
+
     res.json(
-        new ApiResponse("Student updated successfully", 200, student)
+        new ApiResponse("Student updated successfully", 200, updatedStudent)
     );
 });
 

@@ -17,7 +17,7 @@ const router = Router();
 // GET ROUTES
 router.get('/institutions/:institutionId', getBranchesByInstitution);
 router.get('/departments/:departmentId', getBranchByDepartment);
-router.get('/branches/:branchId/department', getDepartmentByBranchId);
+router.get('/:branchId/department', getDepartmentByBranchId);
 router.get('/:branchId', getBranchById);
 
 // POST ROUTES
