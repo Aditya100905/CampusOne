@@ -35,6 +35,7 @@ router.post("/create-student", validateInstitutionJWT, createStudent);
 
 // PUT ROUTES
 router.put("/edit-student/:studentId", validateInstitutionJWT, editStudent);
+router.put("/edit/:studentId", validateUserJWT, editStudent);
 router.put("/update-branch/:studentId", validateInstitutionJWT, updateStudentBranch);
 router.put("/add-courses/:studentId", validateInstitutionJWT, addCourses);
 router.put("/delete-courses/:studentId", validateInstitutionJWT, deleteCourses);
@@ -43,8 +44,7 @@ router.put("/update-hostel-status/:studentId", validateInstitutionJWT, updateHos
 router.put("/change-status/:studentId", validateInstitutionJWT, modifyActiveStatus);
 router.put("/finish-courses/:studentId", validateInstitutionJWT, finishCoursesById);
 router.put("/update-semester/:studentId", validateInstitutionJWT, updateStudentSemester);
-router.put("/student/edit/:studentId", validateUserJWT, editStudent);
-router.put("/student/update-hostel/:studentId", validateUserJWT, updateHostelStatus);
+router.put("/update-hostel/:studentId", validateUserJWT, updateHostelStatus);
 
 // DELETE ROUTES
 router.delete("/delete-student/:studentId", validateInstitutionJWT, deleteStudent);
