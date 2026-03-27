@@ -15,6 +15,7 @@ import {
     checkInstitutionCodeExists,
     getAllInstitutions,
     getInstitutionById,
+    toggleApplicationStatus,
 } from "../controllers/institution.controller.js";
 
 import { validateInstitutionJWT } from "../middlewares/institutionAuth.middleware.js";
