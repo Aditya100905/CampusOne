@@ -8,6 +8,7 @@ import { AdmissionApplication } from "../models/admissionApplication.model.js";
 import sendEmail from "../utils/sendEmail.js";
 import cloudinary from "../utils/cloudinary.js";
 import streamifier from "streamifier";
+import { Institution } from "../models/institution.model.js";
 
 const generateApplicationNumber = () => {
   return "APP-" + crypto.randomBytes(6).toString("hex").toUpperCase();
@@ -38,7 +39,8 @@ const registerAdmissionApplication = asyncHandler(async (req, res) => {
     twelfthBoard,
     twelfthRollNumber,
     twelfthPassingYear,
-    aadharNo
+    aadharNo,
+    yearOfAdmission
   } = req.body;
 
   if (
@@ -47,9 +49,17 @@ const registerAdmissionApplication = asyncHandler(async (req, res) => {
     !dateOfBirth || !gender || !category ||
     !address || !city || !state || !pincode ||
     !tenthMarks || !tenthBoard || !tenthPassingYear ||
-    !tenthRollNumber || !twelfthRollNumber || !twelfthMarks ||
+    !tenthRollNumber || !twelfthRollNumber || !twelfthMarks || !yearOfAdmission ||
     !twelfthBoard || !twelfthPassingYear || !aadharNo) {
     throw new ApiError("All required fields must be provided", 400);
+  }
+
+  const institution = await Institution.findById(institutionId);
+  if (!institution) {
+    throw new ApiError("Institution not found", 404);
+  }
+  if (!institution.isAcceptingAdmissions) {
+    throw new ApiError("This institution is not accepting admissions currently", 400);
   }
 
   const existingApplication = await AdmissionApplication.findOne({ email });

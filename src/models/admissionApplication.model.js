@@ -214,7 +214,17 @@ const admissionApplicationSchema = new mongoose.Schema({
         type: Date,
         default: null
     },
+    yearOfAdmission: {
+        type: Number,
+        required: true
+    }
 }, { timestamps: true });
+
+admissionApplicationSchema.index({ email: 1, institutionId: 1 }, { unique: true });
+
+admissionApplicationSchema.index({ applicationNumber: 1 });
+
+admissionApplicationSchema.index({ institutionId: 1, yearOfAdmission: 1 });
 
 admissionApplicationSchema.pre("save", async function () {
     if (!this.isModified("password")) return;

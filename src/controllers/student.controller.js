@@ -171,7 +171,8 @@ const getStudentById = asyncHandler(async (req, res) => {
         .populate("userId", "name email phone")
         .populate("institutionId", "name")
         .populate("branchId", "name")
-        .populate("courseIds", "name code");
+        .populate("courseIds", "name code")
+        .populate("prevCourses.courseId", "name code");
 
     if (!student) {
         throw new ApiError("Student not found", 404);
