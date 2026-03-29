@@ -58,7 +58,7 @@ const registerAdmissionApplication = asyncHandler(async (req, res) => {
   if (!institution) {
     throw new ApiError("Institution not found", 404);
   }
-  if (!institution.isAcceptingAdmissions) {
+  if (!institution.isAcceptingApplication) {
     throw new ApiError("This institution is not accepting admissions currently", 400);
   }
 
