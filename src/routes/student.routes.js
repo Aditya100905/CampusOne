@@ -13,7 +13,8 @@ import {
     addCourses,
     deleteCourses,
     deleteStudentPrevCourses,
-    finishCoursesById
+    finishCoursesById,
+    updateStudentsSemesterBulk
 } from "../controllers/student.controller.js";
 
 import { validateInstitutionJWT } from "../middlewares/institutionAuth.middleware.js";
@@ -44,6 +45,7 @@ router.put("/update-hostel-status/:studentId", validateInstitutionJWT, updateHos
 router.put("/change-status/:studentId", validateInstitutionJWT, modifyActiveStatus);
 router.put("/finish-courses/:studentId", validateInstitutionJWT, finishCoursesById);
 router.put("/update-semester/:studentId", validateInstitutionJWT, updateStudentSemester);
+router.put("/update-semester-bulk", validateInstitutionJWT, updateStudentsSemesterBulk);
 router.put("/update-hostel/:studentId", validateUserJWT, updateHostelStatus);
 
 // DELETE ROUTES

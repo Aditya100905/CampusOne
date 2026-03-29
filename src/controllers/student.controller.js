@@ -168,7 +168,7 @@ const getStudentById = asyncHandler(async (req, res) => {
     assertObjectId(studentId, "studentId");
 
     const student = await Student.findById(studentId)
-        .populate("userId", "name email phone")
+        .populate("userId", "name email phone avatar")
         .populate("institutionId", "name")
         .populate("branchId", "name")
         .populate("courseIds", "name code")
@@ -378,13 +378,85 @@ const updateStudentSemester = asyncHandler(async (req, res) => {
     assertObjectId(studentId, "studentId");
 
     const updated = await Student.findOneAndUpdate(
-        { _id: studentId },
+    {
+        _id: studentId,
+        courseIds: { $ne: [] }
+    },
+    [
+        {
+            $set: {
+                prevCourses: {
+                    $concatArrays: [
+                        { $ifNull: ["$prevCourses", []] },
+                        {
+                            $map: {
+                                input: "$courseIds",
+                                as: "c",
+                                in: {
+                                    courseId: "$$c",
+                                    semester: "$semester"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        { $set: { courseIds: [] } },
+        { $set: { semester: { $add: ["$semester", 1] } } }
+    ],
+    {
+        new: true,
+        runValidators: true
+    }
+);
+
+if (!updated) {
+    throw new ApiError(
+        "Student not found OR semester already updated",
+        400
+    );
+}
+
+    res.json(new ApiResponse("Semester updated successfully", 200, updated));
+});
+
+const updateStudentsSemesterBulk = asyncHandler(async (req, res) => {
+    const { branchId, admissionYear } = req.body;
+
+    assertObjectId(branchId, "branchId");
+    const students = await Student.find({
+        branchId,
+        admissionYear
+    }).select("_id courseIds semester");
+
+    if (!students.length) {
+        throw new ApiError("No students found for given branch and year", 404);
+    }
+    const validStudents = [];
+    const alreadyUpdated = [];
+
+    for (const s of students) {
+        if (s.courseIds && s.courseIds.length > 0) {
+            validStudents.push(s._id);
+        } else {
+            alreadyUpdated.push(s._id);
+        }
+    }
+    if (validStudents.length === 0) {
+        throw new ApiError(
+            "All students are already promoted (no courses found)",
+            400
+        );
+    }
+    const result = await Student.updateMany(
+        { _id: { $in: validStudents } },
         [
             {
                 $set: {
                     prevCourses: {
                         $concatArrays: [
-                            "$prevCourses",
+                            { $ifNull: ["$prevCourses", []] },
                             {
                                 $map: {
                                     input: "$courseIds",
@@ -401,20 +473,17 @@ const updateStudentSemester = asyncHandler(async (req, res) => {
             },
             { $set: { courseIds: [] } },
             { $set: { semester: { $add: ["$semester", 1] } } }
-        ],
-        {
-            new: true,
-            runValidators: true
-        }
+        ]
     );
-
-    if (!updated) {
-        throw new ApiError("Student not found", 404);
-    }
-
-    res.json(new ApiResponse("Semester updated successfully", 200, updated));
+    res.json(
+        new ApiResponse("Bulk semester update completed", 200, {
+            totalStudents: students.length,
+            updatedCount: result.modifiedCount,
+            skippedCount: alreadyUpdated.length,
+            skippedStudents: alreadyUpdated
+        })
+    );
 });
-
 
 const updateHostelStatus = asyncHandler(async (req, res) => {
     const { studentId } = req.params;
@@ -488,5 +557,6 @@ export {
     updateStudentSemester,
     updateHostelStatus,
     modifyActiveStatus,
-    finishCoursesById
+    finishCoursesById,
+    updateStudentsSemesterBulk
 };
