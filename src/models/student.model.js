@@ -73,11 +73,6 @@ const studentSchema = new mongoose.Schema(
       default: false
     },
 
-    isActive: {
-      type: Boolean,
-      default: true
-    },
-
     guardianDetails: {
       type: [guardianDetailSchema],
       default: []
@@ -94,16 +89,14 @@ studentSchema.index(
 );
 studentSchema.index({
   institutionId: 1,
-  branchId: 1,
-  isActive: 1
+  branchId: 1
 });
 // get student by BATCH(branchCode+admissionYear)
 studentSchema.index({
     institutionId: 1,
     courseIds: 1,
     branchId: 1,
-    admissionYear: 1,
-    isActive: 1
+    admissionYear: 1
 });
 studentSchema.index({
     institutionId: 1,
