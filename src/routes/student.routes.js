@@ -1,20 +1,26 @@
 import { Router } from "express";
 import {
     createStudent,
-    deleteStudent,
     editStudent,
-    getStudentsByBranch,
     getStudentsByInstitution,
+    getStudentsByBranch,
     getStudentById,
+    deleteStudent,
     updateStudentBranch,
-    updateHostelStatus,
-    updateStudentSemester,
-    modifyActiveStatus,
     addCourses,
     deleteCourses,
     deleteStudentPrevCourses,
+    updateStudentSemester,
+    updateHostelStatus,
+    modifyActiveStatus,
     finishCoursesById,
-    updateStudentsSemesterBulk
+    updateStudentsSemesterBulk,
+    addCoursesByEnrollmentNumbers,
+    finishCoursesByEnrollmentNumbers,
+    addCoursesByBranchAndYearOfAdmission,
+    updateStudentsSemesterByEnrollmentNumbers,
+    bulkDeactivateStudentsByEnrollmentNumbers,
+    bulkDeactivateStudentsByBranchAndYear,
 } from "../controllers/student.controller.js";
 
 import { validateInstitutionJWT } from "../middlewares/institutionAuth.middleware.js";
@@ -39,6 +45,9 @@ router.put("/updateSemesterByBatch", validateInstitutionJWT, updateStudentsSemes
 router.put("/addCourses", validateInstitutionJWT, addCoursesByEnrollmentNumbers);
 router.put("/finishCourses", validateInstitutionJWT, finishCoursesByEnrollmentNumbers);
 router.put("/addCoursesByBatch", validateInstitutionJWT, addCoursesByBranchAndYearOfAdmission);
+router.put("/updateSemester", validateInstitutionJWT, updateStudentsSemesterByEnrollmentNumbers);
+router.put("/bulkDeactivate", validateInstitutionJWT, bulkDeactivateStudentsByEnrollmentNumbers);
+router.put("/deactivateBatch", validateInstitutionJWT, bulkDeactivateStudentsByBranchAndYear);
 router.put("/edit-student/:studentId", validateInstitutionJWT, editStudent);
 router.put("/edit/:studentId", validateUserJWT, editStudent);
 router.put("/update-branch/:studentId", validateInstitutionJWT, updateStudentBranch);
