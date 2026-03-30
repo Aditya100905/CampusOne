@@ -154,7 +154,7 @@ const getStudentsByInstitution = asyncHandler(async (req, res) => {
     assertObjectId(institutionId, "institutionId");
 
     const students = await Student.find({ institutionId })
-        .populate("userId", "name email phone")
+        .populate("userId", "name email phone active")
         .populate("branchId", "name")
         .populate("courseIds", "name code");
 
@@ -169,7 +169,7 @@ const getStudentsByBranch = asyncHandler(async (req, res) => {
     assertObjectId(branchId, "branchId");
 
     const students = await Student.find({ branchId, active: true })
-        .populate("userId", "name email")
+        .populate("userId", "name email active")
         .populate("courseIds", "name code");
 
     res.json(
@@ -183,7 +183,7 @@ const getStudentById = asyncHandler(async (req, res) => {
     assertObjectId(studentId, "studentId");
 
     const student = await Student.findById(studentId)
-        .populate("userId", "name email phone avatar")
+        .populate("userId", "name email phone avatar active")
         .populate("institutionId", "name")
         .populate("branchId", "name")
         .populate("courseIds", "name code")
