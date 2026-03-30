@@ -18,7 +18,7 @@ const checkActiveStudentUser = async (studentId) => {
         throw new ApiError("Student not found", 404);
     }
 
-    if (!student.userId || student.userId.isActive === false) {
+    if (!student.userId || student.userId.active === false) {
         throw new ApiError("Associated user is inactive", 403);
     }
 
@@ -154,7 +154,7 @@ const getStudentsByInstitution = asyncHandler(async (req, res) => {
     assertObjectId(institutionId, "institutionId");
 
     const students = await Student.find({ institutionId })
-        .populate("userId", "name email phone")
+        .populate("userId", "name email phone active")
         .populate("branchId", "name")
         .populate("courseIds", "name code");
 
@@ -168,8 +168,8 @@ const getStudentsByBranch = asyncHandler(async (req, res) => {
 
     assertObjectId(branchId, "branchId");
 
-    const students = await Student.find({ branchId, isActive: true })
-        .populate("userId", "name email")
+    const students = await Student.find({ branchId, active: true })
+        .populate("userId", "name email active")
         .populate("courseIds", "name code");
 
     res.json(
@@ -183,7 +183,7 @@ const getStudentById = asyncHandler(async (req, res) => {
     assertObjectId(studentId, "studentId");
 
     const student = await Student.findById(studentId)
-        .populate("userId", "name email phone avatar")
+        .populate("userId", "name email phone avatar active")
         .populate("institutionId", "name")
         .populate("branchId", "name")
         .populate("courseIds", "name code")
@@ -463,7 +463,7 @@ const updateStudentsSemesterBulk = asyncHandler(async (req, res) => {
     const inactiveStudents = [];
 
     for (const s of students) {
-        if (!s.userId || s.userId.isActive === false) {
+        if (!s.userId || s.userId.active === false) {
             inactiveStudents.push(s._id);
         } else if (s.courseIds && s.courseIds.length > 0) {
             validStudents.push(s._id);
@@ -537,7 +537,7 @@ const addCoursesByEnrollmentNumbers = asyncHandler(async (req, res) => {
         .select("_id userId");
 
     const activeStudentIds = students
-        .filter(s => s.userId?.isActive)
+        .filter(s => s.userId?.active)
         .map(s => new mongoose.Types.ObjectId(s._id));
 
     if (activeStudentIds.length === 0) {
@@ -582,7 +582,7 @@ const finishCoursesByEnrollmentNumbers = asyncHandler(async (req, res) => {
         .select("_id userId");
 
     const activeStudentIds = students
-        .filter(s => s.userId?.isActive)
+        .filter(s => s.userId?.active)
         .map(s => new mongoose.Types.ObjectId(s._id));
 
     if (activeStudentIds.length === 0) {
@@ -664,7 +664,7 @@ const updateStudentsSemesterByEnrollmentNumbers = asyncHandler(async (req, res) 
     const inactiveStudents = [];
 
     for (const s of students) {
-        if (!s.userId || s.userId.isActive === false) {
+        if (!s.userId || s.userId.active === false) {
             inactiveStudents.push(s._id);
         } else if (s.courseIds && s.courseIds.length > 0) {
             validStudents.push(s._id);
@@ -732,26 +732,35 @@ const bulkDeactivateStudentsByEnrollmentNumbers = asyncHandler(async (req, res) 
         throw new ApiError("No students found", 404);
     }
 
-    const userIds = students
-        .map(s => s.userId)
-        .filter(Boolean);
+    const userIds = students.map(s => s.userId).filter(Boolean);
 
     if (userIds.length === 0) {
         throw new ApiError("No valid users found for these students", 400);
     }
+    
+    const activeUsers = await User.find({
+        _id: { $in: userIds },
+        active: true
+    }).select("_id");
+
+    if (activeUsers.length === 0) {
+        throw new ApiError("All users are already inactive", 400);
+    }
+
+    const activeUserIds = activeUsers.map(u => u._id);
 
     const result = await User.updateMany(
-        { _id: { $in: userIds } },
-        { $set: { isActive: false } }
+        { _id: { $in: activeUserIds } },
+        { $set: { active: false } }
     );
 
     res.json(
         new ApiResponse("Students deactivated successfully", 200, {
             totalStudents: students.length,
+            alreadyInactive: userIds.length - activeUserIds.length,
             usersDeactivated: result.modifiedCount
         })
     );
-
 });
 
 const bulkDeactivateStudentsByBranchAndYear = asyncHandler(async (req, res) => {
@@ -767,22 +776,32 @@ const bulkDeactivateStudentsByBranchAndYear = asyncHandler(async (req, res) => {
         throw new ApiError("No students found for given branch and admission year", 404);
     }
 
-    const userIds = students
-        .map(s => s.userId)
-        .filter(Boolean);
+    const userIds = students.map(s => s.userId).filter(Boolean);
 
     if (userIds.length === 0) {
         throw new ApiError("No valid users found for these students", 400);
     }
 
+    const activeUsers = await User.find({
+        _id: { $in: userIds },
+        active: true
+    }).select("_id");
+
+    if (activeUsers.length === 0) {
+        throw new ApiError("All users are already inactive", 400);
+    }
+
+    const activeUserIds = activeUsers.map(u => u._id);
+
     const result = await User.updateMany(
-        { _id: { $in: userIds } },
-        { $set: { isActive: false } }
+        { _id: { $in: activeUserIds } },
+        { $set: { active: false } }
     );
 
     res.json(
         new ApiResponse("Students deactivated successfully", 200, {
             totalStudents: students.length,
+            alreadyInactive: userIds.length - activeUserIds.length,
             usersDeactivated: result.modifiedCount
         })
     );
@@ -810,7 +829,7 @@ const addCoursesByBranchAndYearOfAdmission = asyncHandler(async (req, res) => {
         .select("_id userId");
 
     const activeStudentIds = students
-        .filter(s => s.userId?.isActive)
+        .filter(s => s.userId?.active)
         .map(s => new mongoose.Types.ObjectId(s._id));
 
     if (activeStudentIds.length === 0) {
@@ -863,17 +882,17 @@ const updateHostelStatus = asyncHandler(async (req, res) => {
 
 const modifyActiveStatus = asyncHandler(async (req, res) => {
     const { studentId } = req.params;
-    const { isActive } = req.body;
+    const { active } = req.body;
 
     assertObjectId(studentId, "studentId");
 
-    if (typeof isActive !== "boolean") {
-        throw new ApiError("isActive must be boolean", 400);
+    if (typeof active !== "boolean") {
+        throw new ApiError("active must be boolean", 400);
     }
 
     const student = await Student.findByIdAndUpdate(
         studentId,
-        { isActive },
+        { active },
         { new: true }
     );
 
@@ -883,7 +902,7 @@ const modifyActiveStatus = asyncHandler(async (req, res) => {
 
     res.json(
         new ApiResponse(
-            `Student has been ${isActive ? "activated" : "deactivated"} `,
+            `Student has been ${active ? "activated" : "deactivated"} `,
             200,
             student
         )
