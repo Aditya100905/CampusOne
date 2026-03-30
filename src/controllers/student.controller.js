@@ -377,46 +377,46 @@ const updateStudentSemester = asyncHandler(async (req, res) => {
 
     assertObjectId(studentId, "studentId");
 
-    const updated = await Student.findOneAndUpdate(
-    {
-        _id: studentId,
-        courseIds: { $ne: [] }
-    },
-    [
+    const updated = await Student.collection.findOneAndUpdate(
         {
-            $set: {
-                prevCourses: {
-                    $concatArrays: [
-                        { $ifNull: ["$prevCourses", []] },
-                        {
-                            $map: {
-                                input: "$courseIds",
-                                as: "c",
-                                in: {
-                                    courseId: "$$c",
-                                    semester: "$semester"
+            _id: studentId,
+            courseIds: { $ne: [] }
+        },
+        [
+            {
+                $set: {
+                    prevCourses: {
+                        $concatArrays: [
+                            { $ifNull: ["$prevCourses", []] },
+                            {
+                                $map: {
+                                    input: "$courseIds",
+                                    as: "c",
+                                    in: {
+                                        courseId: "$$c",
+                                        semester: "$semester"
+                                    }
                                 }
                             }
-                        }
-                    ]
+                        ]
+                    }
                 }
-            }
-        },
-        { $set: { courseIds: [] } },
-        { $set: { semester: { $add: ["$semester", 1] } } }
-    ],
-    {
-        new: true,
-        runValidators: true
-    }
-);
-
-if (!updated) {
-    throw new ApiError(
-        "Student not found OR semester already updated",
-        400
+            },
+            { $set: { courseIds: [] } },
+            { $set: { semester: { $add: ["$semester", 1] } } }
+        ],
+        {
+            new: true,
+            runValidators: true
+        }
     );
-}
+
+    if (!updated) {
+        throw new ApiError(
+            "Student not found OR semester already updated",
+            400
+        );
+    }
 
     res.json(new ApiResponse("Semester updated successfully", 200, updated));
 });
@@ -449,7 +449,7 @@ const updateStudentsSemesterBulk = asyncHandler(async (req, res) => {
             400
         );
     }
-    const result = await Student.updateMany(
+    const result = await Student.collection.updateMany(
         { _id: { $in: validStudents } },
         [
             {
@@ -483,6 +483,153 @@ const updateStudentsSemesterBulk = asyncHandler(async (req, res) => {
             skippedStudents: alreadyUpdated
         })
     );
+});
+
+const addCoursesByEnrollmentNumbers = asyncHandler(async (req, res) => {
+    const { enrollmentNumbers, courseIds } = req.body;
+
+    if (
+        !Array.isArray(enrollmentNumbers) || enrollmentNumbers.length === 0 ||
+        !Array.isArray(courseIds) || courseIds.length === 0
+    ) {
+        throw new ApiError("Invalid input format", 400);
+    }
+
+    const objCourseIds = courseIds.map(id => {
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            throw new ApiError(`Invalid courseId: ${id}`, 400);
+        }
+        return new mongoose.Types.ObjectId(id);
+    });
+
+    const result = await Student.collection.updateMany(
+        { enrollmentNumber: { $in: enrollmentNumbers } },
+        {
+            $addToSet: {
+                courseIds: { $each: objCourseIds }
+            }
+        }
+    );
+
+    if (result.matchedCount === 0) {
+        throw new ApiError("No students found", 404);
+    }
+
+    res.json(new ApiResponse("Courses added successfully", 200, {
+        matched: result.matchedCount,
+        modified: result.modifiedCount
+    }));
+});
+
+const finishCoursesByEnrollmentNumbers = asyncHandler(async (req, res) => {
+    const { enrollmentNumbers, courseIds } = req.body;
+
+    if (
+        !Array.isArray(enrollmentNumbers) || enrollmentNumbers.length === 0 ||
+        !Array.isArray(courseIds) || courseIds.length === 0
+    ) {
+        throw new ApiError("Invalid input format", 400);
+    }
+
+    const objCourseIds = courseIds.map(id => {
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            throw new ApiError(`Invalid courseId: ${id}`, 400);
+        }
+        return new mongoose.Types.ObjectId(id);
+    });
+
+    const result = await Student.collection.updateMany(
+        {
+            enrollmentNumber: { $in: enrollmentNumbers },
+            courseIds: { $in: objCourseIds }
+        },
+        [
+            {
+                $set: {
+                    _toFinish: {
+                        $map: {
+                            input: {
+                                $filter: {
+                                    input: "$courseIds",
+                                    as: "c",
+                                    cond: { $in: ["$$c", objCourseIds] }
+                                }
+                            },
+                            as: "cf",
+                            in: {
+                                courseId: "$$cf",
+                                semester: "$semester"
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                $set: {
+                    prevCourses: {
+                        $setUnion: ["$prevCourses", "$_toFinish"]
+                    },
+                    courseIds: {
+                        $filter: {
+                            input: "$courseIds",
+                            as: "c",
+                            cond: { $not: { $in: ["$$c", objCourseIds] } }
+                        }
+                    }
+                }
+            },
+            { $unset: "_toFinish" }
+        ]
+    );
+
+    if (result.matchedCount === 0) {
+        throw new ApiError("No matching students/courses found", 404);
+    }
+
+    res.json(new ApiResponse("Courses finished successfully", 200, {
+        matched: result.matchedCount,
+        modified: result.modifiedCount
+    }));
+});
+
+const addCoursesByBranchAndYearOfAdmission = asyncHandler(async (req, res) => {
+    const { branchId, admissionYear, courseIds } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(branchId)) {
+        throw new ApiError("Invalid branchId", 400);
+    }
+
+    if (!Array.isArray(courseIds) || courseIds.length === 0) {
+        throw new ApiError("courseIds must be a non-empty array", 400);
+    }
+
+    const objCourseIds = courseIds.map(id => {
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            throw new ApiError(`Invalid courseId: ${id}`, 400);
+        }
+        return new mongoose.Types.ObjectId(id);
+    });
+
+    const result = await Student.collection.updateMany(
+        { branchId, admissionYear },
+        {
+            $addToSet: {
+                courseIds: { $each: objCourseIds }
+            }
+        }
+    );
+
+    if (result.matchedCount === 0) {
+        throw new ApiError(
+            "No students found for given branch and admission year",
+            404
+        );
+    }
+
+    res.json(new ApiResponse("Courses added successfully", 200, {
+        matched: result.matchedCount,
+        modified: result.modifiedCount
+    }));
 });
 
 const updateHostelStatus = asyncHandler(async (req, res) => {
@@ -558,5 +705,8 @@ export {
     updateHostelStatus,
     modifyActiveStatus,
     finishCoursesById,
-    updateStudentsSemesterBulk
+    updateStudentsSemesterBulk,
+    addCoursesByEnrollmentNumbers,
+    finishCoursesByEnrollmentNumbers,
+    addCoursesByBranchAndYearOfAdmission
 };
