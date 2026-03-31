@@ -369,27 +369,34 @@ const finishFacultyCourse = asyncHandler(async (req, res) => {
 
 const modifyActiveStatus = asyncHandler(async (req, res) => {
   const { facultyId } = req.params;
-  const { isActive } = req.body;
+  const { active } = req.body;
 
-  if (typeof isActive !== "boolean") {
-    throw new ApiError("isActive must be boolean", 400);
+  if (typeof active !== "boolean") {
+    throw new ApiError("Status must be boolean", 400);
   }
 
-  const faculty = await Faculty.findByIdAndUpdate(
-    facultyId,
-    { isActive },
-    { new: true }
-  );
-
+  const faculty = await Faculty.findById(facultyId);
   if (!faculty) {
     throw new ApiError("Faculty not found", 404);
   }
 
+  const user = await User.findByIdAndUpdate(
+    faculty.userId,
+    { active: active },
+    { new: true }
+  );
+
+  if (!user) {
+    throw new ApiError("Associated user not found", 404);
+  }
+
+  const updatedFaculty = await Faculty.findById(facultyId).populate("userId");
+
   res.json(
     new ApiResponse(
-      `Faculty has been ${isActive ? "activated" : "deactivated"}`,
+      `Faculty has been ${active ? "activated" : "deactivated"}`,
       200,
-      faculty
+      updatedFaculty
     )
   );
 });

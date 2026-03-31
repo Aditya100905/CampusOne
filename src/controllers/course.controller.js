@@ -271,14 +271,12 @@ const finishCourseForFaculties = asyncHandler(async (req, res) => {
 
   const count = await Faculty.countDocuments({
     institutionId,
-    isActive: true,
     "courses.courseId": toObjectId(courseId)
   });
 
   await Faculty.updateMany(
     {
       institutionId,
-      isActive: true,
       "courses.courseId": toObjectId(courseId)
     },
     [
@@ -326,9 +324,9 @@ const findFacultyByCourseId = asyncHandler(async (req, res) => {
 
   const faculties = await Faculty.find({
     institutionId,
-    isActive: true,
     "courses.courseId": toObjectId(courseId)
-  }).populate("userId", "name avatar email phone").lean();
+  }).populate("userId", "name avatar email phone active").lean();
+  
   if (faculties.length === 0) {
     throw new ApiError("No faculties found for this course", 404);
   }
@@ -350,9 +348,8 @@ const findFacultyByPrevCourseId = asyncHandler(async (req, res) => {
 
   const faculties = await Faculty.find({
     institutionId,
-    isActive: true,
     "prevCourses.courseId": toObjectId(courseId)
-  }).populate("userId", "name avatar").lean();
+  }).populate("userId", "name avatar email phone active").lean();
   if (faculties.length === 0) {
     throw new ApiError("No faculties found for this previous course", 404);
   }
@@ -409,7 +406,6 @@ const findFacultiesByCourseAndBatch = asyncHandler(async (req, res) => {
 
   const faculties = await Faculty.find({
     institutionId,
-    isActive: true,
     courses: {
       $elemMatch: {
         courseId: toObjectId(courseId),
@@ -437,7 +433,6 @@ const findFacultiesByPrevCourseAndBatch = asyncHandler(async (req, res) => {
 
   const faculties = await Faculty.find({
     institutionId,
-    isActive: true,
     prevCourses: {
       $elemMatch: {
         courseId: toObjectId(courseId),
@@ -476,13 +471,6 @@ const findStudentByCourseId = asyncHandler(async (req, res) => {
     },
     { $unwind: "$branch" },
     {
-      $match: {
-        "branch.departmentId": new mongoose.Types.ObjectId(departmentId),
-        isActive: true,
-        courseIds: new mongoose.Types.ObjectId(courseId)
-      }
-    },
-    {
       $lookup: {
         from: "users",
         localField: "userId",
@@ -491,6 +479,13 @@ const findStudentByCourseId = asyncHandler(async (req, res) => {
       }
     },
     { $unwind: "$user" },
+    {
+      $match: {
+        "branch.departmentId": new mongoose.Types.ObjectId(departmentId),
+        "user.active": true,
+        courseIds: new mongoose.Types.ObjectId(courseId)
+      }
+    },
     {
       $project: {
         _id: 1,
@@ -533,17 +528,6 @@ const findStudentByPrevCourseId = asyncHandler(async (req, res) => {
     },
     { $unwind: "$branch" },
     {
-      $match: {
-        "branch.departmentId": new mongoose.Types.ObjectId(departmentId),
-        isActive: true,
-        prevCourses: {
-          $elemMatch: {
-            courseId: new mongoose.Types.ObjectId(courseId)
-          }
-        }
-      }
-    },
-    {
       $lookup: {
         from: "users",
         localField: "userId",
@@ -552,6 +536,17 @@ const findStudentByPrevCourseId = asyncHandler(async (req, res) => {
       }
     },
     { $unwind: "$user" },
+    {
+      $match: {
+        "branch.departmentId": new mongoose.Types.ObjectId(departmentId),
+        "user.active": true,
+        prevCourses: {
+          $elemMatch: {
+            courseId: new mongoose.Types.ObjectId(courseId)
+          }
+        }
+      }
+    },
     {
       $project: {
         _id: 1,
@@ -589,7 +584,6 @@ const findStudentByInstitutionCourse = asyncHandler(async (req, res) => {
 
   const students = await Student.find({
     institutionId,
-    isActive: true,
     courseIds: toObjectId(courseId)
   })
     .populate("userId", "name avatar")
@@ -608,7 +602,6 @@ const findStudentByInstitutionPrevCourse = asyncHandler(async (req, res) => {
 
   const students = await Student.find({
     institutionId,
-    isActive: true,
     prevCourses: { $elemMatch: { courseId: toObjectId(courseId) } }
   })
     .populate("userId", "name avatar")
@@ -633,7 +626,6 @@ const deleteCourseAndPrevCourseFromStudent = asyncHandler(async (req, res) => {
   await Student.updateMany(
     {
       institutionId,
-      isActive: true,
       courseIds: toObjectId(courseId),
     },
     {
@@ -643,7 +635,6 @@ const deleteCourseAndPrevCourseFromStudent = asyncHandler(async (req, res) => {
   await Student.updateMany(
     {
       institutionId,
-      isActive: true,
       "prevCourses.courseId": toObjectId(courseId),
     },
     {
