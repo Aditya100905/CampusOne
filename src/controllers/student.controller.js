@@ -168,12 +168,16 @@ const getStudentsByBranch = asyncHandler(async (req, res) => {
 
     assertObjectId(branchId, "branchId");
 
-    const students = await Student.find({ branchId, active: true })
-        .populate("userId", "name email active")
+    const students = await Student.find({ branchId })
+        .populate({
+            path: "userId",
+            select: "name email active avatar"
+        })
         .populate("courseIds", "name code");
+    const filteredStudents = students.filter(s => s.userId);
 
     res.json(
-        new ApiResponse("Students fetched successfully", 200, students)
+        new ApiResponse("Students fetched successfully", 200, filteredStudents)
     );
 });
 
@@ -737,7 +741,7 @@ const bulkDeactivateStudentsByEnrollmentNumbers = asyncHandler(async (req, res) 
     if (userIds.length === 0) {
         throw new ApiError("No valid users found for these students", 400);
     }
-    
+
     const activeUsers = await User.find({
         _id: { $in: userIds },
         active: true
@@ -890,21 +894,26 @@ const modifyActiveStatus = asyncHandler(async (req, res) => {
         throw new ApiError("active must be boolean", 400);
     }
 
-    const student = await Student.findByIdAndUpdate(
-        studentId,
-        { active },
-        { new: true }
-    );
-
+    const student = await Student.findById(studentId);
     if (!student) {
         throw new ApiError("Student not found", 404);
     }
 
+    const user = await User.findByIdAndUpdate(
+        student.userId,
+        { active },
+        { new: true }
+    );
+
+    if (!user) {
+        throw new ApiError("User not found", 404);
+    }
+
     res.json(
         new ApiResponse(
-            `Student has been ${active ? "activated" : "deactivated"} `,
+            `Student has been ${active ? "activated" : "deactivated"}`,
             200,
-            student
+            user
         )
     );
 });
